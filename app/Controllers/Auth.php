@@ -18,7 +18,8 @@ class Auth extends BaseController
         if (session('user_id')) {
             return redirect()->to(site_url('Home'));
         }
-        return view('login');
+        $data['assetsPath'] = (strpos(current_url(), 'balrafa.tech') !== false) ? env('app.assetsPath') : base_url();
+        return view('login', $data);
     }
     public function loginProcess()
     {
