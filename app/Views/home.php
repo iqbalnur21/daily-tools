@@ -7,15 +7,15 @@
     <title>Aplikasi Perhitungan</title>
 
     <!-- General CSS Files -->
-    <link rel="stylesheet" href="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/node_modules/@fontawesome/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/node_modules/@fontawesome/fontawesome-free/css/all.min.css">
 
     <!-- CSS Libraries -->
 
     <!-- Template CSS -->
-    <link rel="stylesheet" href="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/assets/css/style.css">
-    <link rel="stylesheet" href="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/assets/css/custom.css">
-    <link rel="stylesheet" href="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/assets/css/components.css">
+    <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/assets/css/style.css">
+    <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/assets/css/custom.css">
+    <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/assets/css/components.css">
     <!-- Start GA -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-94034622-3"></script>
     <script>
@@ -39,7 +39,7 @@
 
                 <ul class="navbar-nav navbar-right">
                     <li class="dropdown"><a href="#" data-toggle="dropdown" class="nav-link dropdown-toggle nav-link-lg nav-link-user">
-                            <img alt="image" src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/assets/img/avatar/avatar-1.png" class="rounded-circle mr-1">
+                            <img alt="image" src="<?= $assetsPath ?>/template_stisla/assets/img/avatar/avatar-1.png" class="rounded-circle mr-1">
                             <div class="d-sm-none d-lg-inline-block">Hi, <?= session('username') ?></div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
@@ -127,21 +127,21 @@
     </div>
 
     <!-- General JS Scripts -->
-    <script src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/node_modules/jquery/dist/jquery.min.js"></script>
-    <script src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/node_modules/popper.js/dist/umd/popper.min.js"></script>
-    <!-- <script src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/node_modules/tooltip.js/dist/tooltip.js"></script> -->
-    <script src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/node_modules/nicescroll/dist/jquery.nicescroll.min.js"></script>
-    <script src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/node_modules/moment/moment.js"></script>
-    <script src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/assets/js/stisla.js"></script>
+    <script src="<?= $assetsPath ?>/template_stisla/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="<?= $assetsPath ?>/template_stisla/node_modules/popper.js/dist/umd/popper.min.js"></script>
+    <!-- <script src="<?= $assetsPath ?>/template_stisla/node_modules/tooltip.js/dist/tooltip.js"></script> -->
+    <script src="<?= $assetsPath ?>/template_stisla/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="<?= $assetsPath ?>/template_stisla/node_modules/nicescroll/dist/jquery.nicescroll.min.js"></script>
+    <script src="<?= $assetsPath ?>/template_stisla/node_modules/moment/moment.js"></script>
+    <script src="<?= $assetsPath ?>/template_stisla/assets/js/stisla.js"></script>
 
     <!-- JS Libraies -->
 
     <!-- Page Specific JS File -->
 
     <!-- Template JS File -->
-    <script src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/assets/js/scripts.js"></script>
-    <script src="<?= (strpos(current_url(), 'balrafa.tech') !== false) ? "https://balrafa.tech/financial-management" : base_url() ?>/template_stisla/assets/js/custom.js"></script>
+    <script src="<?= $assetsPath ?>/template_stisla/assets/js/scripts.js"></script>
+    <script src="<?= $assetsPath ?>/template_stisla/assets/js/custom.js"></script>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>

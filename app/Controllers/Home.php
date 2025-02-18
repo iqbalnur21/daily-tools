@@ -14,6 +14,7 @@ class Home extends BaseController
     public function index()
     {
         $data['counters'] = $this->counters->findAll();
+        $data['assetsPath'] = (strpos(current_url(), 'balrafa.tech') !== false) ? env('app.assetsPath') : base_url();
         return view('home', $data);
     }
     public function update()
