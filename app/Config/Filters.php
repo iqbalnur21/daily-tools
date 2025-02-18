@@ -71,6 +71,8 @@ class Filters extends BaseConfig
             'before' =>
             [
                 '/',
+                'Home',
+                'Home/*',
             ]
         ],
     ];
