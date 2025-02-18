@@ -1,0 +1,88 @@
+/**
+ *
+ * You can write your CSS code here, DO NOT touch the default JavaScript file
+ * because it will make it harder for you to update.
+ * 
+ */
+
+/*# sourceMappingURL=custom.css.map */
+
+div::-webkit-scrollbar {
+  width: 6px;
+  background-color: #f1f1f1;
+}
+
+div::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+}
+
+div::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+div::-webkit-scrollbar-button {
+  display: none;
+}
+
+.header-button {
+  display: inline;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+}
+.action-column {
+  text-align: center;
+}
+.custom-image-preview {
+  border-radius: 5px;
+  width: 50%;
+  height: auto;
+  max-height: 250px;
+  object-fit: cover;
+}
+
+.custom-delete-button {
+  position: absolute;
+  top: 40px;
+  left: 10px;
+}
+.custom-image-wrapper {
+  display: inline;
+  margin-right: 15px;
+  position: relative;
+}
+.custom-image-container {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.admin-chord-box{
+  font-size: 20px;
+}
+.admin-chord-box .length {
+  font-size: small;
+}
+.admin-chord-box input{
+  width: 15px;
+  padding: 0;
+  text-align: center;
+  outline: none;
+  appearance: none;
+  border: none;
+}
+.admin-chord-box .row_value_data{
+  width: 80%;
+  padding: 0;
+  text-align: left;
+  outline: none;
+  appearance: none;
+  border: none;
+}
+.admin-chord-box select {
+  outline: none;
+  appearance: none;
+  border: none;
+}
+.admin-chord-box option {
+  text-align: center;
+}
