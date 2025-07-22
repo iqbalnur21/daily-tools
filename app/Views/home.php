@@ -70,6 +70,9 @@
                                     <div class="card-body">
                                         <div class="form-group">
                                             <div class="row" style="justify-content: space-evenly;">
+                                                <p class="text-muted">Last Update: <?= timeFormat($value['updated_at']) ?></p>
+                                            </div>
+                                            <div class="row" style="justify-content: space-evenly;">
                                                 <button id="minus-<?= $value['counter_id'] ?>" class="counter-btn btn btn-primary rounded-circle">
                                                     <i class="fas fa-minus"></i>
                                                 </button>
@@ -92,6 +95,9 @@
                                     <?php } ?>
                                     <div class="card-body">
                                         <div class="form-group">
+                                            <div class="row" style="justify-content: space-evenly;">
+                                                <p class="text-muted">Last Update: <?= timeFormat($value['updated_at']) ?></p>
+                                            </div>
                                             <div class="row" style="justify-content: space-evenly;">
                                                 <div>
                                                     <b id="title-1" class="counter-text"><?= $value['counter_name'] ?></b>
