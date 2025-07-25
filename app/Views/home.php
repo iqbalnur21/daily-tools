@@ -211,7 +211,6 @@
             }
         });
     </script>
-    </script>
 </body>
 <style>
     .counter-text {
