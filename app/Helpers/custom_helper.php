@@ -20,7 +20,7 @@ function timeFormat($timestamp)
 function log_activity(string $username)
 {
     {
-        $url = "https://balrafa-api.vercel.app/api/log?token=" . getenv('TOKEN_LOG');
+        $url = "https://balrafa-api.vercel.app/api/log?token=" . env('TOKEN_LOG');
 
         $data = ['user' => $username. ' from daily tools system'];
 

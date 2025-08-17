@@ -23,6 +23,8 @@ class Auth extends BaseController
     }
     public function loginProcess()
     {
+        helper('custom');
+        
         $post = $this->request->getPost();
         $query = $this->users->getWhere(['username' => $post['username']]);
         $user = $query->getRow();
