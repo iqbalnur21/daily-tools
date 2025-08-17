@@ -30,6 +30,7 @@ class Auth extends BaseController
             if (password_verify($post['password'], $user->password)) {
                 $params = ['user_id' => $user->user_id, 'username' => $user->username];
                 session()->set($params);
+                log_activity($user->username);
                 return redirect()->to(site_url('Home'));
             } else {
                 return redirect()->back()->with('error', 'Username atau Password Salah');
