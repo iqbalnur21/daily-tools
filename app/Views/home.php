@@ -120,6 +120,25 @@
                             <?php } ?>
                         <?php } ?>
                     </div>
+                    <!-- Modul Perhitungan Biaya Parkir Otomatis -->
+                    <div class="card mt-4 shadow-sm">
+                        <div class="card-header text-white">
+                            <h4>Hitung Biaya Parkir</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group text-center">
+                                <label for="jamMasuk"><strong>Jam Masuk (HH.MM)</strong></label>
+                                <input type="text" id="jamMasuk" class="form-control text-center mx-auto" maxlength="5" placeholder="00.00" style="width:150px; font-size:1.2rem;">
+                            </div>
+
+                            <div id="hasilParkir" class="text-center mt-4" style="display:none;">
+                                <h5 class="mb-2">Durasi Parkir: <span id="durasiParkir" class="text-primary"></span></h5>
+                                <h4 class="text-success">Total Biaya: <span id="biayaParkir"></span></h4>
+                                <p class="text-muted mt-2" id="waktuSekarang"></p>
+                            </div>
+                        </div>
+                    </div>
+
                 </section>
             </div>
             <footer class="main-footer">
@@ -211,6 +230,85 @@
             }
         });
     </script>
+    <script>
+        $(document).ready(function() {
+            const $input = $('#jamMasuk');
+            $input.focus(); // Fokus otomatis ke input saat halaman dibuka
+
+            // Format otomatis HH.MM saat mengetik
+            $input.on('input', function() {
+                let val = $(this).val().replace(/\D/g, ''); // hanya angka
+                if (val.length >= 3) {
+                    val = val.slice(0, 2) + '.' + val.slice(2, 4);
+                }
+                $(this).val(val);
+
+                // Jalankan hitung otomatis jika sudah 5 karakter (HH.MM)
+                if (val.length === 5) {
+                    hitungBiayaParkir();
+                }
+            });
+
+            function hitungBiayaParkir() {
+                let jamMasuk = $input.val();
+
+                if (!/^\d{2}\.\d{2}$/.test(jamMasuk)) {
+                    showToast("Format jam tidak valid! Gunakan HH.MM");
+                    return;
+                }
+
+                let [jam, menit] = jamMasuk.split('.').map(Number);
+                if (jam > 23 || menit > 59) {
+                    showToast("Jam atau menit tidak valid!");
+                    return;
+                }
+
+                let now = new Date();
+                let jamSekarang = now.getHours();
+                let menitSekarang = now.getMinutes();
+                let waktuSekarangStr = now.toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                // Hitung total menit
+                let totalMenitMasuk = jam * 60 + menit;
+                let totalMenitSekarang = jamSekarang * 60 + menitSekarang;
+
+                // Jika jam masuk > jam sekarang (berarti dari hari sebelumnya)
+                if (totalMenitMasuk > totalMenitSekarang) {
+                    totalMenitSekarang += 24 * 60;
+                }
+
+                let selisihMenit = totalMenitSekarang - totalMenitMasuk;
+                let jamTerparkir = Math.ceil(selisihMenit / 60);
+
+                // Hitung biaya parkir
+                let biaya = 0;
+                if (jamTerparkir <= 1) {
+                    biaya = 2000;
+                } else {
+                    biaya = 2000 + (jamTerparkir - 1) * 1000;
+                    if (biaya > 8000) biaya = 8000;
+                }
+
+                // Tampilkan hasil
+                $('#durasiParkir').text(jamTerparkir + ' jam');
+                $('#biayaParkir').text('Rp ' + biaya.toLocaleString('id-ID'));
+                $('#waktuSekarang').text('Waktu Sekarang: ' + waktuSekarangStr);
+                $('#hasilParkir').fadeIn();
+            }
+
+            // Fungsi notifikasi toast
+            function showToast(message) {
+                $("body").append(`<div class="toast-notification">${message}</div>`);
+                $(".toast-notification").fadeIn().delay(2000).fadeOut(function() {
+                    $(this).remove();
+                });
+            }
+        });
+    </script>
+
 </body>
 <style>
     .counter-text {
