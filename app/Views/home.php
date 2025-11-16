@@ -128,7 +128,9 @@
                         <div class="card-body">
                             <div class="form-group text-center">
                                 <label for="jamMasuk"><strong>Jam Masuk (HH.MM)</strong></label>
-                                <input type="text" id="jamMasuk" class="form-control text-center mx-auto" maxlength="5" placeholder="00.00" style="width:150px; font-size:1.2rem;">
+                                <input type="text" id="jamMasuk" class="form-control text-center mx-auto" maxlength="5"
+                                    placeholder="00.00" style="width:150px; font-size:1.2rem;"
+                                    inputmode="numeric" pattern="[0-9]*">
                             </div>
 
                             <div id="hasilParkir" class="text-center mt-4" style="display:none;">
