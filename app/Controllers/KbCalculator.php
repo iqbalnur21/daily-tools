@@ -114,7 +114,7 @@ class KbCalculator extends BaseController
             'end_date'   => $this->request->getPost('end_date'),
         ]);
 
-        return redirect()->to('/')->with('success', 'Data berhasil ditambahkan');
+        return redirect()->to('/KbCalculator')->with('success', 'Data berhasil ditambahkan');
     }
 
     public function update()
