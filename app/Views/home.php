@@ -46,10 +46,64 @@ Aplikasi Perhitungan
     <div class="section-header justify-content-center">
         <h1>Aplikasi Perhitungan</h1>
     </div>
+    <?php
+    $saldoData = null;
+    foreach ($counters as $c) {
+        if ($c['counter_name'] == 'Saldo') {
+            $saldoData = $c;
+            break;
+        }
+    }
+    if ($saldoData):
+    ?>
+        <div class="card shadow-sm border-primary mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="text-white">Informasi Saldo Nia</h4>
+            </div>
+            <div class="card-body text-center">
+                <h1 class="text-primary mb-4">Rp <span id="saldo-amount"><?= number_format($saldoData['amount'], 0, ',', '.') ?></span></h1>
+
+                <div class="form-group">
+                    <label>Nominal (otomatis bernilai ribuan)</label>
+                    <div class="input-group mb-3" style="max-width: 350px; margin: auto;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text font-weight-bold">Rp</span>
+                        </div>
+                        <input type="number" id="input-saldo" class="form-control text-center text-lg font-weight-bold" placeholder="Contoh: 50" style="font-size: 1.2rem;">
+                        <div class="input-group-append">
+                            <span class="input-group-text font-weight-bold">.000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center mb-4">
+                    <button class="btn btn-danger btn-lg mx-2" id="btn-saldo-minus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
+                        <i class="fas fa-minus"></i> Kurangi
+                    </button>
+                    <button class="btn btn-success btn-lg mx-2" id="btn-saldo-plus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
+                        <i class="fas fa-plus"></i> Tambah
+                    </button>
+                </div>
+
+                <div id="saldo-last-calc-container" class="alert alert-light border text-left mx-auto position-relative" style="display: <?= $saldoData['last_calculation'] ? 'block' : 'none' ?>; max-width: 350px; font-size: 16px; font-weight: bold; color: #34395e; background-color:#f9f9f9;">
+
+                    <button type="button" class="btn btn-sm btn-outline-secondary position-absolute" id="btn-copy-saldo" style="top: 10px; right: 10px;" title="Copy Data">
+                        <i class="fas fa-copy"></i>
+                    </button>
+
+                    <div id="saldo-last-calc" style="white-space: pre-line; padding-right: 30px;">
+                        <?= $saldoData['last_calculation'] ?? '' ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
     <div class="section-body">
         <?php
         $count = 0;
-        foreach ($counters as $key => $value) { ?>
+        foreach ($counters as $key => $value) {
+            if ($value['counter_name'] == "Saldo") continue;
+        ?>
             <?php if ($value['counter_name'] == "Hutang Galon" || $value['counter_name'] == "Ganti Puasa") { ?>
                 <div class="card">
                     <div class="card-header">
@@ -154,6 +208,104 @@ Aplikasi Perhitungan
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
+        $('#btn-saldo-plus, #btn-saldo-minus').click(function() {
+            let action = $(this).attr('id').includes('plus') ? 'plus' : 'minus';
+            let counterId = $(this).data('id');
+            let inputVal = $('#input-saldo').val();
+
+            if (!inputVal || inputVal <= 0) {
+                showToast('Masukkan nominal Saldo yang valid!');
+                $('#input-saldo').focus();
+                return;
+            }
+
+            // Disable tombol sesaat agar tidak double click
+            $('#btn-saldo-plus, #btn-saldo-minus').prop('disabled', true);
+
+            $.ajax({
+                url: "<?= site_url('Home/updateSaldo') ?>",
+                type: "POST",
+                data: {
+                    counter_id: counterId,
+                    action: action,
+                    amount: inputVal
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Update UI nominal text & history
+                        $('#saldo-amount').text(response.new_amount_format);
+                        $('#saldo-last-calc').text(response.last_calculation);
+                        $('#saldo-last-calc-container').fadeIn();
+                        $('#input-saldo').val(''); // Kosongkan input
+
+                        let txtAction = action === 'plus' ? 'ditambahkan' : 'dikurangi';
+                        showToast(`Saldo berhasil ${txtAction}!`);
+                    }
+                },
+                error: function() {
+                    showToast('Terjadi kesalahan pada server!');
+                },
+                complete: function() {
+                    // Enable kembali tombol
+                    $('#btn-saldo-plus, #btn-saldo-minus').prop('disabled', false);
+                }
+            });
+        });
+        // --- EVENT KLIK TOMBOL COPY ---
+        $('#btn-copy-saldo').click(function() {
+            // Ambil innerText murni agar format baris baru (Enter / \n) tetap terjaga
+            let textToCopy = document.getElementById('saldo-last-calc').innerText.trim();
+
+            if (!textToCopy) {
+                showToast('Tidak ada data untuk dicopy!');
+                return;
+            }
+
+            // Gunakan metode modern jika didukung (dan jika berjalan di HTTPS/localhost)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(function() {
+                    showToast('Data berhasil dicopy!');
+                }).catch(function() {
+                    fallbackCopyTextToClipboard(textToCopy);
+                });
+            } else {
+                // Fallback untuk iOS lama atau HTTP biasa
+                fallbackCopyTextToClipboard(textToCopy);
+            }
+        });
+
+        // --- FUNGSI FALLBACK COPY (KHUSUS MOBILE/IOS) ---
+        function fallbackCopyTextToClipboard(text) {
+            let textArea = document.createElement("textarea");
+            textArea.value = text;
+
+            // Hindari layar scrolling otomatis ke bawah saat textarea dibuat
+            textArea.style.top = "-30vh";
+            textArea.style.left = "-100vw";
+            textArea.style.position = "fixed";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                let successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('Data berhasil dicopy!');
+                } else {
+                    showToast('Gagal copy data!');
+                }
+            } catch (err) {
+                showToast('Browser tidak mendukung copy otomatis');
+            }
+
+            // Hapus textarea setelah selesai
+            document.body.removeChild(textArea);
+        }
+    });
+</script>
+<script>
+    $(document).ready(function() {
         let timeout = null;
 
         $(".counter-btn").click(function() {
@@ -210,12 +362,13 @@ Aplikasi Perhitungan
                 $(this).remove();
             });
         }
+
     });
 </script>
 <script>
     $(document).ready(function() {
         const $input = $('#jamMasuk');
-        $input.focus(); // Fokus otomatis ke input saat halaman dibuka
+        // $input.focus(); // Fokus otomatis ke input saat halaman dibuka
 
         // Format otomatis HH.MM saat mengetik
         $input.on('input', function() {
