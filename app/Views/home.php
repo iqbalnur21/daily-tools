@@ -87,8 +87,8 @@ Aplikasi Perhitungan
 
                 <div id="saldo-last-calc-container" class="alert alert-light border text-left mx-auto position-relative" style="display: <?= $saldoData['last_calculation'] ? 'block' : 'none' ?>; max-width: 350px; font-size: 16px; font-weight: bold; color: #34395e; background-color:#f9f9f9;">
 
-                    <button type="button" class="btn btn-sm btn-outline-secondary position-absolute" id="btn-copy-saldo" style="top: 10px; right: 10px;" title="Copy Data">
-                        <i class="fas fa-copy"></i>
+                    <button type="button" class="btn btn-sm btn-outline-secondary position-absolute" id="btn-copy-saldo" style="top: 10px; right: 10px;padding: 10px;" title="Copy Data">
+                        <i class="fas fa-copy" style="font-size: 60px"></i>
                     </button>
 
                     <div id="saldo-last-calc" style="white-space: pre-line; padding-right: 30px;">
