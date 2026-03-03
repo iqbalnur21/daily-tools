@@ -13,7 +13,6 @@ Aplikasi KB Kalender
 <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/assets/css/custom.css">
 
 <style>
-  /* Custom style untuk status card */
   .conclusion-card {
     transition: all 0.3s;
   }
@@ -57,7 +56,27 @@ Aplikasi KB Kalender
                 </div>
               </div>
             </div>
-            <small class="text-white-50">*Rentang tanggal di atas adalah waktu TIDAK BOLEH berhubungan tanpa pengaman.</small>
+
+            <div class="row mt-2">
+              <div class="col-md-6">
+                <div class="card bg-white text-dark mb-2">
+                  <div class="card-body p-3">
+                    <small class="text-uppercase font-weight-bold text-muted">Perkiraan Haid Berikutnya</small>
+                    <h5 class="mb-0 text-primary"><?= $conclusion['next_period_start'] ?> <span class="text-dark">s/d</span> <?= $conclusion['next_period_end'] ?></h5>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card bg-white text-dark mb-2">
+                  <div class="card-body p-3">
+                    <small class="text-uppercase font-weight-bold text-muted">Terhitung Telat Haid</small>
+                    <h5 class="mb-0 text-warning">Mulai <?= $conclusion['late_date'] ?></h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <small class="text-white-50 mt-2 d-block">*Rentang tanggal subur adalah waktu TIDAK BOLEH berhubungan tanpa pengaman.</small>
           </div>
         </div>
       </div>
@@ -139,36 +158,37 @@ Aplikasi KB Kalender
   </div>
 </section>
 
-  <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Edit Data Haid</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form action="<?= base_url('KbCalculator/update') ?>" method="POST">
-            <div class="modal-body">
-                <input type="hidden" name="id" id="edit_id">
-                <div class="form-group">
-                    <label>Tanggal Mulai</label>
-                    <input type="date" name="start_date" id="edit_start" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>Tanggal Selesai</label>
-                    <input type="date" name="end_date" id="edit_end" class="form-control" required>
-                </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-              <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-            </div>
-        </form>
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Edit Data Haid</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div>
+      <form action="<?= base_url('KbCalculator/update') ?>" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="id" id="edit_id">
+          <div class="form-group">
+            <label>Tanggal Mulai</label>
+            <input type="date" name="start_date" id="edit_start" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Tanggal Selesai</label>
+            <input type="date" name="end_date" id="edit_end" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+        </div>
+      </form>
     </div>
   </div>
+</div>
 <?= $this->endSection() ?>
+
 <?= $this->section('script') ?>
 <script src="<?= $assetsPath ?>/template_stisla/node_modules/jquery/dist/jquery.min.js"></script>
 <script src="<?= $assetsPath ?>/template_stisla/node_modules/popper.js/dist/umd/popper.min.js"></script>
@@ -181,7 +201,6 @@ Aplikasi KB Kalender
 <script src="<?= $assetsPath ?>/template_stisla/assets/js/custom.js"></script>
 
 <script>
-  // Script untuk memasukkan data ke dalam Modal Edit
   $(document).ready(function() {
     $('.btn-edit').on('click', function() {
       const id = $(this).data('id');

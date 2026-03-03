@@ -17,6 +17,12 @@ class PeriodSeeder extends Seeder
         $data = [
             // Data 4: 5 Jan - 8 Jan (Terbaru)
             [
+                'start_date' => '2026-02-08',
+                'end_date'   => '2026-02-13',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
                 'start_date' => '2026-01-05',
                 'end_date'   => '2026-01-08',
                 'created_at' => $now,
