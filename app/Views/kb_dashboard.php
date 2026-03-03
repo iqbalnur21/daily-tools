@@ -171,7 +171,7 @@ Aplikasi KB Kalender
             <button type="submit" class="btn btn-primary btn-block btn-lg mt-4 shadow-sm" style="border-radius: 8px;">
               <i class="fas fa-save mr-1"></i> Simpan Data
             </button>
-            <p class="text-muted mt-3 mb-0 text-center" style="font-size: 12px;">Data > 6 entri akan dihapus otomatis.</p>
+            <p class="text-muted mt-3 mb-0 text-center" style="font-size: 12px;"><i class="fas fa-lock text-success"></i> Data tersimpan aman sebagai riwayat medis Anda.</p>
           </form>
         </div>
       </div>
@@ -180,7 +180,7 @@ Aplikasi KB Kalender
     <div class="col-lg-8 col-md-12 col-12 col-sm-12">
       <div class="card border-0 shadow-sm">
         <div class="card-header border-bottom-0">
-          <h4 class="text-dark">Riwayat 6 Bulan Terakhir</h4>
+          <h4 class="text-dark">Riwayat Haid (Maks. 1 Tahun Terakhir)</h4>
         </div>
         <div class="card-body p-0">
 

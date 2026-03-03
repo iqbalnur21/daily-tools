@@ -17,25 +17,25 @@ class KbCalculator extends BaseController
 
     public function index()
     {
-        // Ambil data urut dari tanggal terbaru
-        $periods = $this->periodModel->orderBy('start_date', 'DESC')->findAll(6);
+        // AMBIL 12 BULAN TERAKHIR (1 TAHUN) UNTUK KALKULASI YANG LEBIH AKURAT
+        $periods = $this->periodModel->orderBy('start_date', 'DESC')->findAll(12);
 
-        // --- LOGIC HITUNG KB & HAID ---
         $conclusion = [
-            'status' => 'warning', // default
-            'message' => 'Data belum cukup untuk prediksi (Minimal 2 siklus)',
+            'status' => 'Belum Cukup Data',
+            'message' => 'Silakan catat minimal 2 siklus haid. (Saran: 6 siklus untuk hasil akurat)',
             'safe_start' => '-',
             'safe_end' => '-',
-            'next_period_start' => '-', // Tambahan: Perkiraan awal haid
-            'next_period_end' => '-',   // Tambahan: Perkiraan akhir haid
-            'late_date' => '-',         // Tambahan: Terhitung telat
+            'next_period_start' => '-',
+            'next_period_end' => '-',
+            'late_date' => '-',
             'color_class' => 'bg-secondary'
         ];
 
-        if (count($periods) >= 2) {
+        $countPeriods = count($periods);
+
+        if ($countPeriods >= 2) {
             $cycles = [];
-            // Hitung panjang siklus antar bulan
-            for ($i = 0; $i < count($periods) - 1; $i++) {
+            for ($i = 0; $i < $countPeriods - 1; $i++) {
                 $current = Time::parse($periods[$i]['start_date']);
                 $prev    = Time::parse($periods[$i + 1]['start_date']);
                 $diff    = $prev->difference($current)->getDays();
@@ -46,17 +46,14 @@ class KbCalculator extends BaseController
                 $minCycle = min($cycles);
                 $maxCycle = max($cycles);
 
-                // Rumus KB Kalender
                 $firstFertileDay = $minCycle - 18;
                 $lastFertileDay  = $maxCycle - 11;
 
-                // Patokan perhitungan adalah hari pertama haid TERAKHIR
                 $lastPeriodStart = Time::parse($periods[0]['start_date']);
 
                 $fertileWindowStart = Time::parse($periods[0]['start_date'])->addDays($firstFertileDay);
                 $fertileWindowEnd   = Time::parse($periods[0]['start_date'])->addDays($lastFertileDay);
 
-                // --- PERHITUNGAN HAID SELANJUTNYA ---
                 $nextPeriodStartObj = Time::parse($periods[0]['start_date'])->addDays($minCycle);
                 $nextPeriodEndObj   = Time::parse($periods[0]['start_date'])->addDays($maxCycle);
                 $lateDateObj        = Time::parse($periods[0]['start_date'])->addDays($maxCycle + 1);
@@ -67,31 +64,32 @@ class KbCalculator extends BaseController
 
                 $today = Time::now();
 
-                // Cek Status Hari Ini
+                // Warning jika data kurang dari 6 bulan
+                $accuracyWarning = ($countPeriods < 6) ? " (Akurasi rendah: Catat min. 6 bulan untuk hasil optimal)" : "";
+
                 if ($today >= $fertileWindowStart && $today <= $fertileWindowEnd) {
                     $conclusion['status'] = 'BAHAYA (Masa Subur)';
-                    $conclusion['message'] = 'Jangan berhubungan tanpa pengaman hari ini!';
+                    $conclusion['message'] = 'Jangan berhubungan tanpa pengaman hari ini!' . $accuracyWarning;
                     $conclusion['color_class'] = 'bg-danger text-white';
                 } elseif ($today < $fertileWindowStart) {
                     $diff = $today->difference($fertileWindowStart)->getDays();
                     if ($diff <= 2) {
                         $conclusion['status'] = 'HATI-HATI';
-                        $conclusion['message'] = 'Masa subur akan dimulai dalam 2 hari.';
-                        $conclusion['color_class'] = 'bg-warning text-dark'; // Ubah text jadi dark agar terbaca di kuning
+                        $conclusion['message'] = 'Masa subur akan dimulai dalam 2 hari.' . $accuracyWarning;
+                        $conclusion['color_class'] = 'bg-warning text-dark';
                     } else {
                         $conclusion['status'] = 'AMAN';
-                        $conclusion['message'] = 'Hari ini kemungkinan besar aman.';
+                        $conclusion['message'] = 'Hari ini kemungkinan besar aman.' . $accuracyWarning;
                         $conclusion['color_class'] = 'bg-success text-white';
                     }
                 } else {
-                    // Pengecekan tambahan jika hari ini sudah masuk tanggal telat haid
                     if ($today >= $lateDateObj) {
                         $conclusion['status'] = 'TELAT HAID';
-                        $conclusion['message'] = 'Masa subur telah lewat, namun Anda sudah telat haid. Segera lakukan test pack jika diperlukan.';
+                        $conclusion['message'] = 'Masa subur telah lewat, Anda sudah telat haid. Segera lakukan test pack.' . $accuracyWarning;
                         $conclusion['color_class'] = 'bg-info text-white';
                     } else {
                         $conclusion['status'] = 'SANGAT AMAN';
-                        $conclusion['message'] = 'Masa subur telah lewat.';
+                        $conclusion['message'] = 'Masa subur telah lewat.' . $accuracyWarning;
                         $conclusion['color_class'] = 'bg-success text-white';
                     }
                 }
@@ -112,14 +110,7 @@ class KbCalculator extends BaseController
 
     public function store()
     {
-        $count = $this->periodModel->countAllResults();
-
-        if ($count >= 6) {
-            $oldest = $this->periodModel->orderBy('start_date', 'ASC')->first();
-            if ($oldest) {
-                $this->periodModel->delete($oldest['id']);
-            }
-        }
+        // LOGIKA DELETE DIHAPUS. Kita biarkan data tersimpan sebagai riwayat medis jangka panjang.
 
         $this->periodModel->save([
             'start_date' => $this->request->getPost('start_date'),
