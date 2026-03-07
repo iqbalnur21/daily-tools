@@ -151,28 +151,49 @@ Aplikasi KB Kalender
       </div>
     </div>
   </div>
-
-  <div class="row">
+<div class="row">
     <div class="col-lg-4 col-md-12 col-12 col-sm-12">
       <div class="card border-0 shadow-sm">
         <div class="card-header border-bottom-0 pb-0">
-          <h4 class="text-dark">Catat Haid Bulan Ini</h4>
+          <h4 class="text-dark">Pencatatan Haid</h4>
         </div>
         <div class="card-body pt-3">
-          <form action="<?= base_url('KbCalculator/store') ?>" method="POST">
-            <div class="form-group">
-              <label class="text-muted">Tanggal Mulai Haid</label>
-              <input type="date" name="start_date" class="form-control bg-light border-0" required>
+          
+          <?php if ($is_ongoing): ?>
+            <div class="alert alert-info alert-has-icon p-3 border-0" style="border-radius: 8px;">
+              <div class="alert-icon"><i class="fas fa-spinner fa-spin"></i></div>
+              <div class="alert-body">
+                <div class="alert-title" style="font-size: 14px;">Sedang Haid</div>
+                Siklus sedang berjalan.
+              </div>
             </div>
-            <div class="form-group">
-              <label class="text-muted">Tanggal Selesai Haid</label>
-              <input type="date" name="end_date" class="form-control bg-light border-0" required>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block btn-lg mt-4 shadow-sm" style="border-radius: 8px;">
-              <i class="fas fa-save mr-1"></i> Simpan Data
-            </button>
-            <p class="text-muted mt-3 mb-0 text-center" style="font-size: 12px;"><i class="fas fa-lock text-success"></i> Data tersimpan aman sebagai riwayat medis Anda.</p>
-          </form>
+            
+            <form action="<?= base_url('KbCalculator/storeEnd') ?>" method="POST">
+              <input type="hidden" name="id" value="<?= $active_id ?>">
+              <div class="form-group">
+                <label class="text-muted">Kapan Haid Anda Selesai?</label>
+                <input type="date" name="end_date" class="form-control bg-light border-0" required>
+              </div>
+              <button type="submit" class="btn btn-info btn-block btn-lg mt-4 shadow-sm" style="border-radius: 8px;">
+                <i class="fas fa-check mr-1"></i> Simpan Selesai Haid
+              </button>
+            </form>
+
+          <?php else: ?>
+            <form action="<?= base_url('KbCalculator/storeStart') ?>" method="POST">
+              <div class="form-group">
+                <label class="text-muted">Tanggal Mulai Haid</label>
+                <input type="date" name="start_date" class="form-control bg-light border-0" required>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block btn-lg mt-4 shadow-sm" style="border-radius: 8px;">
+                <i class="fas fa-play mr-1"></i> Catat Mulai Haid
+              </button>
+            </form>
+          <?php endif; ?>
+
+          <p class="text-muted mt-4 mb-0 text-center" style="font-size: 12px;">
+            <i class="fas fa-lock text-success"></i> Data tersimpan aman sebagai riwayat medis.
+          </p>
         </div>
       </div>
     </div>
@@ -183,16 +204,14 @@ Aplikasi KB Kalender
           <h4 class="text-dark">Riwayat Haid (Maks. 1 Tahun Terakhir)</h4>
         </div>
         <div class="card-body p-0">
-
+          
           <?php if (empty($periods)): ?>
             <div class="empty-state" data-height="300">
               <div class="empty-state-icon bg-light text-muted">
                 <i class="fas fa-calendar-times"></i>
               </div>
               <h2>Belum ada data</h2>
-              <p class="lead text-muted">
-                Silakan isi form di samping untuk mulai merekam siklus Anda.
-              </p>
+              <p class="lead text-muted">Silakan isi form di samping untuk mulai merekam siklus Anda.</p>
             </div>
           <?php else: ?>
             <div class="table-responsive">
@@ -208,22 +227,29 @@ Aplikasi KB Kalender
                 <tbody>
                   <?php foreach ($periods as $p):
                     $start = \CodeIgniter\I18n\Time::parse($p['start_date']);
-                    $end = \CodeIgniter\I18n\Time::parse($p['end_date']);
-                    $diff = $end->difference($start)->getDays() + 1;
+                    
+                    // Cek jika end_date kosong (Sedang berjalan)
+                    if (empty($p['end_date'])) {
+                        $endLabel = '<span class="text-muted font-italic">Belum Selesai</span>';
+                        $diffLabel = '<span class="badge badge-info px-3 py-2"><i class="fas fa-spinner fa-spin mr-1"></i> Sedang Haid</span>';
+                        $endData = ''; // Untuk dilempar ke modal
+                    } else {
+                        $end = \CodeIgniter\I18n\Time::parse($p['end_date']);
+                        $endLabel = $end->toLocalizedString('d MMM YYYY');
+                        $diff = $end->difference($start)->getDays() + 1;
+                        $diffLabel = '<span class="badge badge-light px-3 py-2 text-dark" style="font-weight: 500;">' . $diff . ' Hari</span>';
+                        $endData = $p['end_date'];
+                    }
                   ?>
                     <tr>
                       <td class="pl-4 font-weight-600"><?= $start->toLocalizedString('d MMM YYYY') ?></td>
-                      <td class="text-muted"><?= $end->toLocalizedString('d MMM YYYY') ?></td>
-                      <td class="text-center">
-                        <span class="badge badge-light px-3 py-2 text-dark" style="font-weight: 500;">
-                          <?= $diff ?> Hari
-                        </span>
-                      </td>
+                      <td><?= $endLabel ?></td>
+                      <td class="text-center"><?= $diffLabel ?></td>
                       <td class="text-right pr-4">
                         <button class="btn btn-icon btn-outline-primary btn-sm btn-edit rounded-circle"
                           data-id="<?= $p['id'] ?>"
                           data-start="<?= $p['start_date'] ?>"
-                          data-end="<?= $p['end_date'] ?>"
+                          data-end="<?= $endData ?>"
                           data-toggle="modal" data-target="#editModal"
                           title="Edit Data">
                           <i class="fas fa-pencil-alt"></i>
@@ -252,21 +278,21 @@ Aplikasi KB Kalender
         </button>
       </div>
       <form action="<?= base_url('KbCalculator/update') ?>" method="POST">
-        <div class="modal-body">
-          <input type="hidden" name="id" id="edit_id">
-          <div class="form-group">
-            <label class="text-muted">Tanggal Mulai</label>
-            <input type="date" name="start_date" id="edit_start" class="form-control bg-light border-0" required>
+          <div class="modal-body">
+              <input type="hidden" name="id" id="edit_id">
+              <div class="form-group">
+                  <label class="text-muted">Tanggal Mulai</label>
+                  <input type="date" name="start_date" id="edit_start" class="form-control bg-light border-0" required>
+              </div>
+              <div class="form-group mb-0">
+                  <label class="text-muted">Tanggal Selesai <small>(Kosongkan jika belum selesai)</small></label>
+                  <input type="date" name="end_date" id="edit_end" class="form-control bg-light border-0">
+              </div>
           </div>
-          <div class="form-group mb-0">
-            <label class="text-muted">Tanggal Selesai</label>
-            <input type="date" name="end_date" id="edit_end" class="form-control bg-light border-0" required>
+          <div class="modal-footer border-top-0 pt-0">
+            <button type="button" class="btn btn-light" data-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary shadow-sm"><i class="fas fa-check mr-1"></i> Simpan Perubahan</button>
           </div>
-        </div>
-        <div class="modal-footer border-top-0 pt-0">
-          <button type="button" class="btn btn-light" data-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary shadow-sm"><i class="fas fa-check mr-1"></i> Simpan Perubahan</button>
-        </div>
       </form>
     </div>
   </div>
