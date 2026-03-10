@@ -19,6 +19,36 @@ class Auth extends BaseController
             return redirect()->to(site_url('Home'));
         }
         $data['assetsPath'] = (strpos(current_url(), 'balrafa.tech') !== false) ? env('app.assetsPath') : base_url();
+
+        // 2. FITUR AUTO LOGIN VIA TOKEN
+        $token = $this->request->getGet('token');
+        $envToken = getenv('AUTO_LOGIN_TOKEN'); // Ambil token dari file .env
+    
+        if ($token && $envToken && $token === $envToken) {
+            // Ambil spesifik user "iqbal"
+            $query = $this->users->getWhere(['username' => 'iqbal']);
+            $user = $query->getRow();
+
+            if ($user) {
+                // Set session dan update last login seperti proses login normal
+                $params = [
+                    'user_id' => $user->user_id,
+                    'username' => $user->username,
+                    'role' => $user->role,
+                    'app' => $user->app
+                ];
+
+                // $this->users->update($user->user_id, ['last_login' => date('Y-m-d H:i:s')]);
+                session()->set($params);
+
+                if (function_exists('log_activity')) {
+                    log_activity($user->username);
+                }
+
+                return redirect()->to(site_url('Home'));
+            }
+        }
+
         return view('login', $data);
     }
     public function loginProcess()

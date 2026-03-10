@@ -14,7 +14,15 @@ class User extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = true;
     protected $protectFields    = true;
-    protected $allowedFields    = [];
+    protected $allowedFields    = [
+        "username",
+        "password",
+        "role",
+        "app",
+        "created_at",
+        "updated_at",
+        "deleted_at",
+    ];
 
     // Dates
     protected $useTimestamps = true;
@@ -39,5 +47,4 @@ class User extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
-
 }
