@@ -104,7 +104,7 @@ Aplikasi Perhitungan
         foreach ($counters as $key => $value) {
             if ($value['counter_name'] == "Saldo") continue;
         ?>
-            <?php if ($value['counter_name'] == "Hutang Galon" || $value['counter_name'] == "Ganti Puasa") { ?>
+            <?php if ($value['counter_name'] == "Hutang Galon" || $value['counter_name'] == "Ganti Puasa" || $value['counter_name'] == "Ganti Puasa Nia") { ?>
                 <div class="card">
                     <div class="card-header">
                         <h4><?= $value['counter_name'] ?></h4>
