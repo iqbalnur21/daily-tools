@@ -62,7 +62,6 @@ Aplikasi KB Kalender
     border-top: 1px solid #f4f6f9;
   }
 
-  /* Pemisah vertikal untuk layout grouped */
   @media (min-width: 768px) {
     .border-md-right {
       border-right: 1px solid #eef1f5;
@@ -151,14 +150,15 @@ Aplikasi KB Kalender
       </div>
     </div>
   </div>
-<div class="row">
+
+  <div class="row">
     <div class="col-lg-4 col-md-12 col-12 col-sm-12">
       <div class="card border-0 shadow-sm">
         <div class="card-header border-bottom-0 pb-0">
           <h4 class="text-dark">Pencatatan Haid</h4>
         </div>
         <div class="card-body pt-3">
-          
+
           <?php if ($is_ongoing): ?>
             <div class="alert alert-info alert-has-icon p-3 border-0" style="border-radius: 8px;">
               <div class="alert-icon"><i class="fas fa-spinner fa-spin"></i></div>
@@ -167,7 +167,7 @@ Aplikasi KB Kalender
                 Siklus sedang berjalan.
               </div>
             </div>
-            
+
             <form action="<?= base_url('KbCalculator/storeEnd') ?>" method="POST">
               <input type="hidden" name="id" value="<?= $active_id ?>">
               <div class="form-group">
@@ -201,10 +201,10 @@ Aplikasi KB Kalender
     <div class="col-lg-8 col-md-12 col-12 col-sm-12">
       <div class="card border-0 shadow-sm">
         <div class="card-header border-bottom-0">
-          <h4 class="text-dark">Riwayat Haid (Maks. 1 Tahun Terakhir)</h4>
+          <h4 class="text-dark">Riwayat & Siklus Haid Keseluruhan</h4>
         </div>
         <div class="card-body p-0">
-          
+
           <?php if (empty($periods)): ?>
             <div class="empty-state" data-height="300">
               <div class="empty-state-icon bg-light text-muted">
@@ -220,31 +220,44 @@ Aplikasi KB Kalender
                   <tr>
                     <th class="pl-4">Tanggal Mulai</th>
                     <th>Tanggal Selesai</th>
-                    <th class="text-center">Durasi</th>
+                    <th class="text-center">Durasi Haid</th>
+                    <th class="text-center">Siklus (Antar Haid)</th>
                     <th class="text-right pr-4">Opsi</th>
                   </tr>
                 </thead>
                 <tbody>
                   <?php foreach ($periods as $p):
                     $start = \CodeIgniter\I18n\Time::parse($p['start_date']);
-                    
-                    // Cek jika end_date kosong (Sedang berjalan)
+
                     if (empty($p['end_date'])) {
-                        $endLabel = '<span class="text-muted font-italic">Belum Selesai</span>';
-                        $diffLabel = '<span class="badge badge-info px-3 py-2"><i class="fas fa-spinner fa-spin mr-1"></i> Sedang Haid</span>';
-                        $endData = ''; // Untuk dilempar ke modal
+                      $endLabel = '<span class="text-muted font-italic">Belum Selesai</span>';
+                      $diffLabel = '<span class="badge badge-info px-3 py-2"><i class="fas fa-spinner fa-spin mr-1"></i> Sedang Haid</span>';
+                      $endData = '';
                     } else {
-                        $end = \CodeIgniter\I18n\Time::parse($p['end_date']);
-                        $endLabel = $end->toLocalizedString('d MMM YYYY');
-                        $diff = $end->difference($start)->getDays() + 1;
-                        $diffLabel = '<span class="badge badge-light px-3 py-2 text-dark" style="font-weight: 500;">' . $diff . ' Hari</span>';
-                        $endData = $p['end_date'];
+                      $end = \CodeIgniter\I18n\Time::parse($p['end_date']);
+                      $endLabel = $end->toLocalizedString('d MMM YYYY');
+                      $diff = $end->difference($start)->getDays() + 1;
+                      $diffLabel = '<span class="badge badge-light px-3 py-2 text-dark" style="font-weight: 500;">' . $diff . ' Hari</span>';
+                      $endData = $p['end_date'];
                     }
                   ?>
                     <tr>
                       <td class="pl-4 font-weight-600"><?= $start->toLocalizedString('d MMM YYYY') ?></td>
                       <td><?= $endLabel ?></td>
                       <td class="text-center"><?= $diffLabel ?></td>
+
+                      <td class="text-center">
+                        <?php if ($p['is_current_cycle']): ?>
+                          <span class="badge badge-warning px-3 py-2 text-dark" style="font-weight: 500;" title="Terhitung hingga hari ini">
+                            <?= $p['cycle_length'] ?> Hari (Berjalan)
+                          </span>
+                        <?php else: ?>
+                          <span class="badge badge-light px-3 py-2 text-dark" style="font-weight: 500;">
+                            <?= $p['cycle_length'] ?> Hari
+                          </span>
+                        <?php endif; ?>
+                      </td>
+
                       <td class="text-right pr-4">
                         <button class="btn btn-icon btn-outline-primary btn-sm btn-edit rounded-circle"
                           data-id="<?= $p['id'] ?>"
@@ -278,21 +291,21 @@ Aplikasi KB Kalender
         </button>
       </div>
       <form action="<?= base_url('KbCalculator/update') ?>" method="POST">
-          <div class="modal-body">
-              <input type="hidden" name="id" id="edit_id">
-              <div class="form-group">
-                  <label class="text-muted">Tanggal Mulai</label>
-                  <input type="date" name="start_date" id="edit_start" class="form-control bg-light border-0" required>
-              </div>
-              <div class="form-group mb-0">
-                  <label class="text-muted">Tanggal Selesai <small>(Kosongkan jika belum selesai)</small></label>
-                  <input type="date" name="end_date" id="edit_end" class="form-control bg-light border-0">
-              </div>
+        <div class="modal-body">
+          <input type="hidden" name="id" id="edit_id">
+          <div class="form-group">
+            <label class="text-muted">Tanggal Mulai</label>
+            <input type="date" name="start_date" id="edit_start" class="form-control bg-light border-0" required>
           </div>
-          <div class="modal-footer border-top-0 pt-0">
-            <button type="button" class="btn btn-light" data-dismiss="modal">Batal</button>
-            <button type="submit" class="btn btn-primary shadow-sm"><i class="fas fa-check mr-1"></i> Simpan Perubahan</button>
+          <div class="form-group mb-0">
+            <label class="text-muted">Tanggal Selesai <small>(Kosongkan jika belum selesai)</small></label>
+            <input type="date" name="end_date" id="edit_end" class="form-control bg-light border-0">
           </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0">
+          <button type="button" class="btn btn-light" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary shadow-sm"><i class="fas fa-check mr-1"></i> Simpan Perubahan</button>
+        </div>
       </form>
     </div>
   </div>

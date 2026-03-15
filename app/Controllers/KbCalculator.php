@@ -19,6 +19,23 @@ class KbCalculator extends BaseController
     {
         $periods = $this->periodModel->orderBy('start_date', 'DESC')->findAll(12);
 
+        // Hitung panjang siklus antar haid dan simpan ke dalam array $periods
+        $today = Time::now();
+        for ($i = 0; $i < count($periods); $i++) {
+            $start = Time::parse($periods[$i]['start_date']);
+
+            if ($i === 0) {
+                // Siklus terakhir/terbaru: Hitung dari tanggal mulai sampai HARI INI
+                $periods[$i]['cycle_length'] = abs($start->difference($today)->getDays());
+                $periods[$i]['is_current_cycle'] = true;
+            } else {
+                // Siklus sebelumnya: Hitung dari tanggal mulai saat ini ke tanggal mulai haid berikutnya (index sebelumnya)
+                $newerStart = Time::parse($periods[$i - 1]['start_date']);
+                $periods[$i]['cycle_length'] = abs($start->difference($newerStart)->getDays());
+                $periods[$i]['is_current_cycle'] = false;
+            }
+        }
+
         // Cek apakah ada haid yang sedang berlangsung (end_date kosong/null)
         $is_ongoing = false;
         $active_id = null;
@@ -124,17 +141,15 @@ class KbCalculator extends BaseController
         return view('kb_dashboard', $data);
     }
 
-    // Fungsi untuk mencatat haid baru (hanya start_date)
     public function storeStart()
     {
         $this->periodModel->save([
             'start_date' => $this->request->getPost('start_date'),
-            'end_date'   => null, // Sengaja dikosongkan
+            'end_date'   => null,
         ]);
         return redirect()->to('/KbCalculator')->with('success', 'Mulai haid berhasil dicatat');
     }
 
-    // Fungsi untuk menyelesaikan haid yang sedang berjalan
     public function storeEnd()
     {
         $this->periodModel->save([
@@ -144,7 +159,6 @@ class KbCalculator extends BaseController
         return redirect()->to('/KbCalculator')->with('success', 'Selesai haid berhasil dicatat');
     }
 
-    // Fungsi edit lewat Modal (tetap dipertahankan untuk mengedit data lama)
     public function update()
     {
         $this->periodModel->save([
