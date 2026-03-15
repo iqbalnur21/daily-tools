@@ -236,7 +236,7 @@ Aplikasi KB Kalender
                     } else {
                       $end = \CodeIgniter\I18n\Time::parse($p['end_date']);
                       $endLabel = $end->toLocalizedString('d MMM YYYY');
-                      $diff = $end->difference($start)->getDays() + 1;
+                      $diff = abs($start->difference($end)->getDays()) + 1;
                       $diffLabel = '<span class="badge badge-light px-3 py-2 text-dark" style="font-weight: 500;">' . $diff . ' Hari</span>';
                       $endData = $p['end_date'];
                     }
