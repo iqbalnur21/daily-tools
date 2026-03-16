@@ -8,9 +8,6 @@ Aplikasi Perhitungan
 <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/node_modules/bootstrap/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/node_modules/@fontawesome/fontawesome-free/css/all.min.css">
 
-<!-- CSS Libraries -->
-
-<!-- Template CSS -->
 <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/assets/css/style.css">
 <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/assets/css/custom.css">
 <link rel="stylesheet" href="<?= $assetsPath ?>/template_stisla/assets/css/components.css">
@@ -46,63 +43,59 @@ Aplikasi Perhitungan
     <div class="section-header justify-content-center">
         <h1>Aplikasi Perhitungan</h1>
     </div>
-    <?php
-    $saldoData = null;
-    foreach ($counters as $c) {
-        if ($c['counter_name'] == 'Saldo') {
-            $saldoData = $c;
-            break;
-        }
-    }
-    if ($saldoData):
-    ?>
-        <div class="card shadow-sm border-primary mb-4">
-            <div class="card-header bg-primary text-white">
-                <h4 class="text-white">Informasi Saldo Nia</h4>
-            </div>
-            <div class="card-body text-center">
-                <h1 class="text-primary mb-4">Rp <span id="saldo-amount"><?= number_format($saldoData['amount'], 0, ',', '.') ?></span></h1>
 
-                <div class="form-group">
-                    <label>Nominal (otomatis bernilai ribuan)</label>
-                    <div class="input-group mb-3" style="max-width: 350px; margin: auto;">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text font-weight-bold">Rp</span>
+    <?php foreach ($counters as $saldoData): ?>
+        <?php if (stripos($saldoData['counter_name'], 'Saldo') !== false): ?>
+            <div class="card shadow-sm border-primary mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="text-white">Informasi <?= esc($saldoData['counter_name']) ?></h4>
+                </div>
+                <div class="card-body text-center">
+                    <h1 class="text-primary mb-4">Rp <span id="saldo-amount-<?= $saldoData['counter_id'] ?>"><?= number_format($saldoData['amount'], 0, ',', '.') ?></span></h1>
+
+                    <div class="form-group">
+                        <label>Nominal (otomatis bernilai ribuan)</label>
+                        <div class="input-group mb-3" style="max-width: 350px; margin: auto;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text font-weight-bold">Rp</span>
+                            </div>
+                            <input type="number" id="input-saldo-<?= $saldoData['counter_id'] ?>" class="form-control text-center text-lg font-weight-bold" placeholder="Contoh: 50" style="font-size: 1.2rem;">
+                            <div class="input-group-append">
+                                <span class="input-group-text font-weight-bold">.000</span>
+                            </div>
                         </div>
-                        <input type="number" id="input-saldo" class="form-control text-center text-lg font-weight-bold" placeholder="Contoh: 50" style="font-size: 1.2rem;">
-                        <div class="input-group-append">
-                            <span class="input-group-text font-weight-bold">.000</span>
+                    </div>
+
+                    <div class="d-flex justify-content-center mb-4">
+                        <button class="btn btn-danger btn-lg mx-2 btn-saldo-action" data-action="minus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
+                            <i class="fas fa-minus"></i> Kurangi
+                        </button>
+                        <button class="btn btn-success btn-lg mx-2 btn-saldo-action" data-action="plus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
+                            <i class="fas fa-plus"></i> Tambah
+                        </button>
+                    </div>
+
+                    <div id="saldo-last-calc-container-<?= $saldoData['counter_id'] ?>" class="alert alert-light border text-left mx-auto position-relative" style="display: <?= $saldoData['last_calculation'] ? 'block' : 'none' ?>; max-width: 350px; font-size: 16px; font-weight: bold; color: #34395e; background-color:#f9f9f9;">
+
+                        <button type="button" class="btn btn-sm btn-outline-secondary position-absolute btn-copy-saldo" data-id="<?= $saldoData['counter_id'] ?>" style="top: 10px; right: 10px;padding: 10px;" title="Copy Data">
+                            <i class="fas fa-copy" style="font-size: 60px"></i>
+                        </button>
+
+                        <div id="saldo-last-calc-<?= $saldoData['counter_id'] ?>" style="white-space: pre-line; padding-right: 30px;">
+                            <?= $saldoData['last_calculation'] ?? '' ?>
                         </div>
                     </div>
                 </div>
-
-                <div class="d-flex justify-content-center mb-4">
-                    <button class="btn btn-danger btn-lg mx-2" id="btn-saldo-minus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
-                        <i class="fas fa-minus"></i> Kurangi
-                    </button>
-                    <button class="btn btn-success btn-lg mx-2" id="btn-saldo-plus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
-                        <i class="fas fa-plus"></i> Tambah
-                    </button>
-                </div>
-
-                <div id="saldo-last-calc-container" class="alert alert-light border text-left mx-auto position-relative" style="display: <?= $saldoData['last_calculation'] ? 'block' : 'none' ?>; max-width: 350px; font-size: 16px; font-weight: bold; color: #34395e; background-color:#f9f9f9;">
-
-                    <button type="button" class="btn btn-sm btn-outline-secondary position-absolute" id="btn-copy-saldo" style="top: 10px; right: 10px;padding: 10px;" title="Copy Data">
-                        <i class="fas fa-copy" style="font-size: 60px"></i>
-                    </button>
-
-                    <div id="saldo-last-calc" style="white-space: pre-line; padding-right: 30px;">
-                        <?= $saldoData['last_calculation'] ?? '' ?>
-                    </div>
-                </div>
             </div>
-        </div>
-    <?php endif; ?>
+        <?php endif; ?>
+    <?php endforeach; ?>
+
     <div class="section-body">
         <?php
         $count = 0;
         foreach ($counters as $key => $value) {
-            if ($value['counter_name'] == "Saldo") continue;
+            // Skip ALL counters that contain "Saldo"
+            if (stripos($value['counter_name'], 'Saldo') !== false) continue;
         ?>
             <?php if ($value['counter_name'] == "Hutang Galon" || $value['counter_name'] == "Ganti Puasa" || $value['counter_name'] == "Ganti Puasa Nia") { ?>
                 <div class="card">
@@ -162,7 +155,6 @@ Aplikasi Perhitungan
             <?php } ?>
         <?php } ?>
     </div>
-    <!-- Modul Perhitungan Biaya Parkir Otomatis -->
     <div class="card mt-4 shadow-sm">
         <div class="card-header text-white">
             <h4>Hitung Biaya Parkir</h4>
@@ -188,39 +180,34 @@ Aplikasi Perhitungan
 
 <?= $this->section('script') ?>
 
-<!-- General JS Scripts -->
 <script src="<?= $assetsPath ?>/template_stisla/node_modules/jquery/dist/jquery.min.js"></script>
 <script src="<?= $assetsPath ?>/template_stisla/node_modules/popper.js/dist/umd/popper.min.js"></script>
-<!-- <script src="<?= $assetsPath ?>/template_stisla/node_modules/tooltip.js/dist/tooltip.js"></script> -->
 <script src="<?= $assetsPath ?>/template_stisla/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="<?= $assetsPath ?>/template_stisla/node_modules/nicescroll/dist/jquery.nicescroll.min.js"></script>
 <script src="<?= $assetsPath ?>/template_stisla/node_modules/moment/moment.js"></script>
 <script src="<?= $assetsPath ?>/template_stisla/assets/js/stisla.js"></script>
 
-<!-- JS Libraies -->
-
-<!-- Page Specific JS File -->
-
-<!-- Template JS File -->
 <script src="<?= $assetsPath ?>/template_stisla/assets/js/scripts.js"></script>
 <script src="<?= $assetsPath ?>/template_stisla/assets/js/custom.js"></script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('#btn-saldo-plus, #btn-saldo-minus').click(function() {
-            let action = $(this).attr('id').includes('plus') ? 'plus' : 'minus';
+        // --- EVENT KLIK TOMBOL PLUS / MINUS SALDO ---
+        $('.btn-saldo-action').click(function() {
+            let action = $(this).data('action');
             let counterId = $(this).data('id');
-            let inputVal = $('#input-saldo').val();
+            let inputVal = $('#input-saldo-' + counterId).val();
 
             if (!inputVal || inputVal <= 0) {
                 showToast('Masukkan nominal Saldo yang valid!');
-                $('#input-saldo').focus();
+                $('#input-saldo-' + counterId).focus();
                 return;
             }
 
-            // Disable tombol sesaat agar tidak double click
-            $('#btn-saldo-plus, #btn-saldo-minus').prop('disabled', true);
+            // Disable tombol spesifik pada card ini sesaat agar tidak double click
+            let buttons = $('.btn-saldo-action[data-id="' + counterId + '"]');
+            buttons.prop('disabled', true);
 
             $.ajax({
                 url: "<?= site_url('Home/updateSaldo') ?>",
@@ -232,14 +219,16 @@ Aplikasi Perhitungan
                 },
                 success: function(response) {
                     if (response.success) {
-                        // Update UI nominal text & history
-                        $('#saldo-amount').text(response.new_amount_format);
-                        $('#saldo-last-calc').text(response.last_calculation);
-                        $('#saldo-last-calc-container').fadeIn();
-                        $('#input-saldo').val(''); // Kosongkan input
+                        // Update UI nominal text & history berdasarkan ID dinamis
+                        $('#saldo-amount-' + response.counter_id).text(response.new_amount_format);
+                        $('#saldo-last-calc-' + response.counter_id).text(response.last_calculation);
+                        $('#saldo-last-calc-container-' + response.counter_id).fadeIn();
+                        $('#input-saldo-' + response.counter_id).val(''); // Kosongkan input
 
                         let txtAction = action === 'plus' ? 'ditambahkan' : 'dikurangi';
                         showToast(`Saldo berhasil ${txtAction}!`);
+                    } else {
+                        showToast(response.message || 'Gagal update data');
                     }
                 },
                 error: function() {
@@ -247,21 +236,26 @@ Aplikasi Perhitungan
                 },
                 complete: function() {
                     // Enable kembali tombol
-                    $('#btn-saldo-plus, #btn-saldo-minus').prop('disabled', false);
+                    buttons.prop('disabled', false);
                 }
             });
         });
+
         // --- EVENT KLIK TOMBOL COPY ---
-        $('#btn-copy-saldo').click(function() {
+        $('.btn-copy-saldo').click(function() {
+            let counterId = $(this).data('id');
             // Ambil innerText murni agar format baris baru (Enter / \n) tetap terjaga
-            let textToCopy = document.getElementById('saldo-last-calc').innerText.trim();
+            let textElement = document.getElementById('saldo-last-calc-' + counterId);
+
+            if (!textElement) return;
+
+            let textToCopy = textElement.innerText.trim();
 
             if (!textToCopy) {
                 showToast('Tidak ada data untuk dicopy!');
                 return;
             }
 
-            // Gunakan metode modern jika didukung (dan jika berjalan di HTTPS/localhost)
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(textToCopy).then(function() {
                     showToast('Data berhasil dicopy!');
@@ -269,7 +263,6 @@ Aplikasi Perhitungan
                     fallbackCopyTextToClipboard(textToCopy);
                 });
             } else {
-                // Fallback untuk iOS lama atau HTTP biasa
                 fallbackCopyTextToClipboard(textToCopy);
             }
         });

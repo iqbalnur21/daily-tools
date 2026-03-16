@@ -65,12 +65,13 @@ class Home extends BaseController
             'success' => true,
             'updated' => $updated,
         ]);
-    }public function updateSaldo()
+    }
+    public function updateSaldo()
     {
         $counterId = $this->request->getPost('counter_id');
         $action = $this->request->getPost('action');
-        $inputAmount = (int) $this->request->getPost('amount'); 
-        
+        $inputAmount = (int) $this->request->getPost('amount');
+
         // Otomatis kalikan 1000 sesuai permintaan (nambah 3 angka nol)
         $realAmount = $inputAmount * 1000;
 
@@ -108,6 +109,7 @@ class Home extends BaseController
 
         return $this->response->setJSON([
             'success' => true,
+            'counter_id' => $counterId, // <-- BARIS BARU: Agar JS tau card mana yang harus diupdate
             'new_amount_format' => number_format($newAmount, 0, ',', '.'),
             'last_calculation' => $lastCalculation
         ]);
