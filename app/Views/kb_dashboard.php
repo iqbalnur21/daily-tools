@@ -67,13 +67,31 @@ Aplikasi KB Kalender
       border-right: 1px solid #eef1f5;
     }
   }
+
+  /* Toggle Icon Animation */
+  .section-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .toggle-icon {
+    transition: transform 0.3s ease;
+  }
+
+  /* Bootstrap automatically adds the 'collapsed' class to the trigger when closed */
+  .section-header.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+  }
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <section class="section">
-  <div class="section-header">
+  <div class="section-header" data-toggle="collapse" data-target=".info-toggle-panel" aria-expanded="true">
     <h1>Dashboard Kesuburan</h1>
+    <i class="fas fa-chevron-down toggle-icon text-muted"></i>
   </div>
 
   <?php
@@ -95,7 +113,7 @@ Aplikasi KB Kalender
   }
   ?>
 
-  <div class="row">
+  <div class="row collapse show info-toggle-panel">
     <div class="col-12">
       <div class="alert <?= $alertClass ?> alert-has-icon alert-custom p-4 mb-4">
         <div class="alert-icon"><i class="fas <?= $iconClass ?>"></i></div>
@@ -108,7 +126,7 @@ Aplikasi KB Kalender
   </div>
 
   <div class="row">
-    <div class="col-lg-6 col-md-12 col-12 mb-4">
+    <div class="col-lg-6 col-md-12 col-12 mb-4 collapse show info-toggle-panel">
       <div class="card info-card card-danger h-100 mb-0">
         <div class="card-header pb-3 pt-3">
           <h4><i class="fas fa-heart text-danger mr-2"></i> Jendela Masa Subur</h4>
