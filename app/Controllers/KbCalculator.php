@@ -58,21 +58,18 @@ class KbCalculator extends BaseController
 
         $countPeriods = count($periods);
 
-        // LOGIKA JIKA SEDANG HAID
-        if ($is_ongoing) {
-            $conclusion['status'] = 'SEDANG HAID';
-            $conclusion['message'] = 'Silakan input tanggal selesai haid untuk melihat prediksi masa subur Anda.';
-            $conclusion['color_class'] = 'bg-info text-white';
-        }
-        // LOGIKA NORMAL JIKA TIDAK SEDANG HAID DAN DATA >= 2
-        elseif ($countPeriods >= 2) {
+        // Logika Prediksi: Selalu dihitung jika data >= 2, BAHKAN saat sedang haid
+        if ($countPeriods >= 2) {
             $cycles = [];
-            // Hitung hanya yang sudah memiliki end_date
+
+            // Hitung perbedaan HANYA dari start_date (tanggal mulai) antar siklus
+            // Hal ini membuat kita tetap bisa menghitung siklus meski haid saat ini belum selesai
             for ($i = 0; $i < $countPeriods - 1; $i++) {
-                if (!empty($periods[$i]['end_date']) && !empty($periods[$i + 1]['end_date'])) {
-                    $current = Time::parse($periods[$i]['start_date']);
-                    $prev    = Time::parse($periods[$i + 1]['start_date']);
-                    $diff    = $prev->difference($current)->getDays();
+                $current = Time::parse($periods[$i]['start_date']);
+                $prev    = Time::parse($periods[$i + 1]['start_date']);
+                $diff    = abs($prev->difference($current)->getDays());
+
+                if ($diff > 0) {
                     $cycles[] = $diff;
                 }
             }
@@ -95,39 +92,60 @@ class KbCalculator extends BaseController
                 $conclusion['next_period_end']   = $nextPeriodEndObj->toLocalizedString('d MMM YYYY');
                 $conclusion['late_date']         = $lateDateObj->toLocalizedString('d MMM YYYY');
 
-                $today = Time::now();
                 $accuracyWarning = ($countPeriods < 6) ? " (Akurasi rendah: Catat min. 6 bulan)" : "";
 
-                if ($today >= $fertileWindowStart && $today <= $fertileWindowEnd) {
-                    $conclusion['status'] = 'BAHAYA (Masa Subur)';
-                    $conclusion['message'] = 'Jangan berhubungan tanpa pengaman hari ini!' . $accuracyWarning;
-                    $conclusion['color_class'] = 'bg-danger text-white';
-                } elseif ($today < $fertileWindowStart) {
-                    $diff = $today->difference($fertileWindowStart)->getDays();
-                    if ($diff <= 2) {
-                        $conclusion['status'] = 'HATI-HATI';
-                        $conclusion['message'] = 'Masa subur akan dimulai dalam 2 hari.' . $accuracyWarning;
-                        $conclusion['color_class'] = 'bg-warning text-dark';
-                    } else {
-                        $conclusion['status'] = 'AMAN';
-                        $conclusion['message'] = 'Hari ini kemungkinan besar aman.' . $accuracyWarning;
-                        $conclusion['color_class'] = 'bg-success text-white';
-                    }
+                if ($is_ongoing) {
+                    $conclusion['status'] = 'SEDANG HAID';
+
+                    $currentStart = Time::parse($periods[0]['start_date']);
+                    // Hitung sudah berapa hari haid berlangsung (Hari H = Hari ke-1)
+                    $daysDiff = abs($currentStart->difference($today)->getDays());
+                    $hariKe = $daysDiff + 1;
+
+                    // Penerapan Rule:
+                    // Jika hari ke-1 / ke-2 -> Asumsi durasi 3 hari
+                    // Jika hari ke-5 -> Asumsi durasi 5 hari
+                    $asumsiDurasi = ($hariKe <= 3) ? 3 : $hariKe;
+
+                    $conclusion['message'] = "Siklus berjalan (Hari ke-$hariKe). Prediksi ke depan dihitung dengan proyeksi durasi haid $asumsiDurasi hari." . $accuracyWarning;
+                    $conclusion['color_class'] = 'bg-info text-white';
                 } else {
-                    if ($today >= $lateDateObj) {
-                        $conclusion['status'] = 'TELAT HAID';
-                        $conclusion['message'] = 'Masa subur telah lewat, Anda sudah telat haid.' . $accuracyWarning;
-                        $conclusion['color_class'] = 'bg-warning text-dark';
+                    if ($today >= $fertileWindowStart && $today <= $fertileWindowEnd) {
+                        $conclusion['status'] = 'BAHAYA (Masa Subur)';
+                        $conclusion['message'] = 'Jangan berhubungan tanpa pengaman hari ini!' . $accuracyWarning;
+                        $conclusion['color_class'] = 'bg-danger text-white';
+                    } elseif ($today < $fertileWindowStart) {
+                        $diff = $today->difference($fertileWindowStart)->getDays();
+                        if ($diff <= 2) {
+                            $conclusion['status'] = 'HATI-HATI';
+                            $conclusion['message'] = 'Masa subur akan dimulai dalam 2 hari.' . $accuracyWarning;
+                            $conclusion['color_class'] = 'bg-warning text-dark';
+                        } else {
+                            $conclusion['status'] = 'AMAN';
+                            $conclusion['message'] = 'Hari ini kemungkinan besar aman.' . $accuracyWarning;
+                            $conclusion['color_class'] = 'bg-success text-white';
+                        }
                     } else {
-                        $conclusion['status'] = 'SANGAT AMAN';
-                        $conclusion['message'] = 'Masa subur telah lewat.' . $accuracyWarning;
-                        $conclusion['color_class'] = 'bg-success text-white';
+                        if ($today >= $lateDateObj) {
+                            $conclusion['status'] = 'TELAT HAID';
+                            $conclusion['message'] = 'Masa subur telah lewat, Anda sudah telat haid.' . $accuracyWarning;
+                            $conclusion['color_class'] = 'bg-warning text-dark';
+                        } else {
+                            $conclusion['status'] = 'SANGAT AMAN';
+                            $conclusion['message'] = 'Masa subur telah lewat.' . $accuracyWarning;
+                            $conclusion['color_class'] = 'bg-success text-white';
+                        }
                     }
                 }
 
                 $conclusion['safe_start'] = $fertileWindowStart->toLocalizedString('d MMM YYYY');
                 $conclusion['safe_end']   = $fertileWindowEnd->toLocalizedString('d MMM YYYY');
             }
+        } elseif ($is_ongoing) {
+            // Kondisi jika sedang haid tapi belum ada riwayat siklus sebelumnya (baru 1 data)
+            $conclusion['status'] = 'SEDANG HAID';
+            $conclusion['message'] = 'Catat minimal 2 siklus untuk mulai melihat prediksi otomatis.';
+            $conclusion['color_class'] = 'bg-info text-white';
         }
 
         $data = [
