@@ -22,7 +22,7 @@ class Auth extends BaseController
 
         // 2. FITUR AUTO LOGIN VIA TOKEN
         $token = $this->request->getGet('token');
-        $envToken = getenv('AUTO_LOGIN_TOKEN'); // Ambil token dari file .env
+        $envToken = env('AUTO_LOGIN_TOKEN'); // Ambil token dari file .env
     
         if ($token && $envToken && $token === $envToken) {
             // Ambil spesifik user "iqbal"
