@@ -15,7 +15,9 @@ class Home extends BaseController
     {
         helper('custom');
 
-        $data['counters'] = $this->counters->findAll();
+        $data['counters'] = $this->counters
+            ->where('disabled', '!=', 1)
+            ->findAll();
         $data['assetsPath'] = (strpos(current_url(), 'balrafa.tech') !== false) ? env('app.assetsPath') : base_url();
         return view('home', $data);
     }
