@@ -33,6 +33,12 @@ $routes->setAutoRoute(true);
 // route since we don't have to scan directories.
 $routes->get('/', 'Home::index');
 
+// Series Tracker Routes
+$routes->get('series/list', 'SeriesController::list');
+$routes->post('series/store', 'SeriesController::store');
+$routes->put('series/update/(:num)', 'SeriesController::update/$1');
+$routes->delete('series/delete/(:num)', 'SeriesController::delete/$1');
+$routes->post('series/episode/toggle', 'SeriesController::toggleEpisode');
 /*
  * --------------------------------------------------------------------
  * Additional Routing
