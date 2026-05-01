@@ -48,7 +48,7 @@ class SeriesController extends BaseController
 
     // -------------------------------------------------------
     // POST /series/store
-    // Body JSON: { title, type, notes, rating, seasons: [{season_num, total_eps}] }
+    // Body JSON: { title, notes, rating, seasons: [{season_num, total_eps}], watched_season, watched_episode }
     // -------------------------------------------------------
     public function store()
     {
@@ -59,13 +59,17 @@ class SeriesController extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Judul wajib diisi']);
         }
 
-        // Simpan series
+        // Simpan series, bypass type (ditetapkan ke default 'series')
         $seriesId = $this->series->insert([
             'title'  => trim($input['title']),
-            'type'   => $input['type']   ?? 'series',
+            'type'   => 'series',
             'notes'  => $input['notes']  ?? null,
             'rating' => isset($input['rating']) && $input['rating'] !== '' ? (int)$input['rating'] : null,
         ]);
+
+        // Tangkap input default progress tontonan
+        $watchedSeason  = !empty($input['watched_season']) ? (int)$input['watched_season'] : 1;
+        $watchedEpisode = !empty($input['watched_episode']) ? (int)$input['watched_episode'] : 1;
 
         // Simpan seasons + generate episode rows
         if (!empty($input['seasons']) && is_array($input['seasons'])) {
@@ -79,12 +83,19 @@ class SeriesController extends BaseController
                     'total_eps'  => $totalEps,
                 ]);
 
-                // Generate episode rows
+                // Generate episode rows, apply logic progress default
                 for ($ep = 1; $ep <= $totalEps; $ep++) {
+                    $status = 0;
+                    // Jika season ini < watched_season ATAU di season yang sama dan ep <= watched_episode
+                    if ($seasonNum < $watchedSeason || ($seasonNum == $watchedSeason && $ep <= $watchedEpisode)) {
+                        $status = 2; // Otomatis sudah ditonton
+                    }
+
                     $this->episodes->insert([
-                        'season_id' => $seasonId,
-                        'ep_num'    => $ep,
-                        'status'    => 0,
+                        'season_id'  => $seasonId,
+                        'ep_num'     => $ep,
+                        'status'     => $status,
+                        'watched_at' => ($status === 2) ? date('Y-m-d H:i:s') : null,
                     ]);
                 }
             }
@@ -95,8 +106,7 @@ class SeriesController extends BaseController
 
     // -------------------------------------------------------
     // PUT /series/update/{id}
-    // Bisa update title/type/notes/rating dan seasons
-    // Jika seasons dikirim, hapus seasons lama lalu buat ulang
+    // Update data series (tanpa merubah type) & rebuild episode dengan retain progress sebelumnya
     // -------------------------------------------------------
     public function update($id)
     {
@@ -110,14 +120,13 @@ class SeriesController extends BaseController
         // Update field series
         $this->series->update($id, [
             'title'  => trim($input['title']  ?? $series['title']),
-            'type'   => $input['type']   ?? $series['type'],
             'notes'  => $input['notes']  ?? $series['notes'],
             'rating' => isset($input['rating']) && $input['rating'] !== '' ? (int)$input['rating'] : null,
         ]);
 
         // Jika seasons dikirim ulang, rebuild
         if (isset($input['seasons']) && is_array($input['seasons'])) {
-            // Hapus seasons lama (episodes terhapus via CASCADE)
+            // Hapus seasons lama (episodes terhapus otomatis jika FK CASCADE DB aktif)
             $oldSeasons = $this->seasons->where('series_id', $id)->findAll();
             foreach ($oldSeasons as $os) {
                 $this->seasons->delete($os['id']);
@@ -128,7 +137,7 @@ class SeriesController extends BaseController
                 $seasonNum = (int)($s['season_num'] ?? 1);
                 $totalEps  = (int)($s['total_eps']  ?? 1);
 
-                // Kalau season sudah punya data episode (dikirim dari client), restore statusnya
+                // Tarik data progress lama yang di bypass ke JSON
                 $existingEps = $s['episodes'] ?? [];
 
                 $seasonId = $this->seasons->insert([
@@ -138,7 +147,6 @@ class SeriesController extends BaseController
                 ]);
 
                 for ($ep = 1; $ep <= $totalEps; $ep++) {
-                    // Cari status lama jika ada
                     $oldStatus = 0;
                     foreach ($existingEps as $oe) {
                         if ((int)$oe['ep_num'] === $ep) {
@@ -170,40 +178,48 @@ class SeriesController extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Data tidak ditemukan']);
         }
 
-        // Cascade akan hapus seasons & episodes otomatis (jika FK CASCADE aktif)
         $this->series->delete($id);
 
         return $this->response->setJSON(['success' => true]);
     }
 
     // -------------------------------------------------------
-    // POST /series/episode/toggle
-    // Body JSON: { episode_id }
-    // Siklus status: 0 -> 1 (orange/watching) -> 2 (hijau/done) -> 0 (belum)
+    // POST /series/disable/{id}
+    // Mengubah status kolom disabled di DB menjadi 1 (Hide UI)
     // -------------------------------------------------------
-    public function toggleEpisode()
+    public function disable($id)
     {
-        $input = $this->request->getJSON(true);
-        $epId  = (int)($input['episode_id'] ?? 0);
-
-        $ep = $this->episodes->find($epId);
-        if (!$ep) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Episode tidak ditemukan']);
+        $series = $this->series->find($id);
+        if (!$series) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Data tidak ditemukan']);
         }
 
-        $currentStatus = (int)$ep['status'];
-        // Siklus: 0 -> 1 -> 2 -> 0
-        $newStatus = ($currentStatus + 1) % 3;
+        $this->series->update($id, ['disabled' => 1]);
 
-        $this->episodes->update($epId, [
-            'status'     => $newStatus,
-            'watched_at' => ($newStatus === 2) ? date('Y-m-d H:i:s') : $ep['watched_at'],
-        ]);
+        return $this->response->setJSON(['success' => true]);
+    }
 
-        return $this->response->setJSON([
-            'success'    => true,
-            'episode_id' => $epId,
-            'new_status' => $newStatus,
-        ]);
+    // -------------------------------------------------------
+    // POST /series/episodes/batch-update
+    // Memproses payload update debounce ajax.
+    // JSON: { updates: { 'episode_id': 2, 'episode_id': 0 } }
+    // -------------------------------------------------------
+    public function batchUpdateEpisodes()
+    {
+        $input = $this->request->getJSON(true);
+        $updates = $input['updates'] ?? [];
+
+        if (empty($updates)) {
+            return $this->response->setJSON(['success' => true]);
+        }
+
+        foreach ($updates as $epId => $status) {
+            $this->episodes->update($epId, [
+                'status'     => (int)$status,
+                'watched_at' => ((int)$status === 2) ? date('Y-m-d H:i:s') : null,
+            ]);
+        }
+
+        return $this->response->setJSON(['success' => true]);
     }
 }

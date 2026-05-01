@@ -50,14 +50,6 @@ Aplikasi Perhitungan
         margin: 0;
     }
 
-    .series-type-badge {
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        padding: 3px 8px;
-        border-radius: 20px;
-    }
-
     /* Episode buttons */
     .ep-btn {
         width: 34px;
@@ -81,23 +73,15 @@ Aplikasi Perhitungan
         background: #e9ecef;
     }
 
-    .ep-btn.watching {
-        background: #fd7e14;
-        border-color: #e8650a;
-        color: #fff;
-    }
-
-    /* orange */
     .ep-btn.done {
         background: #28a745;
         border-color: #1e7e34;
         color: #fff;
     }
 
-    /* hijau */
-
     /* Season row */
     .season-block {
+        margin-top: 12px;
         margin-bottom: 12px;
     }
 
@@ -246,12 +230,9 @@ Aplikasi Perhitungan
         <?php
         $count = 0;
         foreach ($counters as $key => $value):
-            // Skip Saldo
             if (stripos($value['counter_name'], 'Saldo') !== false) continue;
-            // Skip Parkir — sekarang punya komponen sendiri di bawah
             if (stripos($value['counter_name'], 'Parkir') !== false) continue;
         ?>
-
             <?php if (
                 $value['counter_name'] == "Hutang Galon" ||
                 $value['counter_name'] == "Ganti Puasa"  ||
@@ -274,7 +255,6 @@ Aplikasi Perhitungan
                         </div>
                     </div>
                 </div>
-
             <?php else: ?>
                 <div class="card <?= $count != 4 ? 'mb-0' : '' ?>">
                     <?php $count++;
@@ -314,8 +294,6 @@ Aplikasi Perhitungan
             break;
         }
     }
-    // Tampilkan hanya jika row Parkir ada dan tidak disabled
-    // (disabled sudah difilter di controller, tapi double-check di sini untuk safety)
     if ($parkirData !== null):
     ?>
         <div class="card mt-4 shadow-sm">
@@ -338,7 +316,7 @@ Aplikasi Perhitungan
     <?php endif; ?>
 
     <!-- ═══════════════════════════════════════════════════════
-         KOMPONEN SERIES TRACKER  (BARU)
+         KOMPONEN SERIES TRACKER
     ════════════════════════════════════════════════════════ -->
     <div class="card series-card mt-4 shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -348,7 +326,6 @@ Aplikasi Perhitungan
             </button>
         </div>
         <div class="card-body" id="series-list-container">
-            <!-- Diisi oleh JS -->
             <div class="series-empty" id="series-empty-state">
                 <i class="fas fa-film"></i>
                 Belum ada data. Klik <strong>Tambah</strong> untuk mulai mencatat.
@@ -374,18 +351,9 @@ Aplikasi Perhitungan
                 <input type="hidden" id="series-edit-id" value="">
 
                 <div class="form-row">
-                    <div class="form-group col-md-8">
+                    <div class="form-group col-md-12">
                         <label class="font-weight-bold">Judul <span class="text-danger">*</span></label>
                         <input type="text" id="series-title" class="form-control" placeholder="Contoh: Attack on Titan">
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label class="font-weight-bold">Tipe</label>
-                        <select id="series-type" class="form-control">
-                            <option value="series">Series / Drama</option>
-                            <option value="anime">Anime</option>
-                            <option value="movie">Movie</option>
-                            <option value="documentary">Dokumenter</option>
-                        </select>
                     </div>
                 </div>
 
@@ -400,9 +368,20 @@ Aplikasi Perhitungan
                     </div>
                 </div>
 
+                <div class="form-row" id="watched-input-row">
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">Sudah nonton sampai Season</label>
+                        <input type="number" id="series-watched-season" class="form-control" value="1" min="1">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">Episode</label>
+                        <input type="number" id="series-watched-episode" class="form-control" value="1" min="1">
+                    </div>
+                </div>
+
                 <hr>
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="font-weight-bold mb-0">Seasons &amp; Episode</label>
+                    <label class="font-weight-bold mb-0">Seasons &amp; Episode Total</label>
                     <button type="button" class="btn btn-outline-primary btn-sm btn-add-season-row" id="btn-add-season">
                         <i class="fas fa-plus mr-1"></i> Tambah Season
                     </button>
@@ -471,7 +450,7 @@ Aplikasi Perhitungan
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
-    //  SALDO
+    //  SALDO & COUNTER JS (Sudah ada, dibiarkan seperti asli...)
     // ─────────────────────────────────────────────────────────────────────────────
     $(document).ready(function() {
         $('.btn-saldo-action').click(function() {
@@ -488,11 +467,7 @@ Aplikasi Perhitungan
             $.ajax({
                 url: "<?= site_url('Home/updateSaldo') ?>",
                 type: "POST",
-                data: {
-                    counter_id: counterId,
-                    action: action,
-                    amount: inputVal
-                },
+                data: { counter_id: counterId, action: action, amount: inputVal },
                 success: function(response) {
                     if (response.success) {
                         $('#saldo-amount-' + response.counter_id).text(response.new_amount_format);
@@ -504,12 +479,8 @@ Aplikasi Perhitungan
                         showToast(response.message || 'Gagal update data', 'danger');
                     }
                 },
-                error: function() {
-                    showToast('Terjadi kesalahan pada server!', 'danger');
-                },
-                complete: function() {
-                    buttons.prop('disabled', false);
-                }
+                error: function() { showToast('Terjadi kesalahan pada server!', 'danger'); },
+                complete: function() { buttons.prop('disabled', false); }
             });
         });
 
@@ -518,17 +489,12 @@ Aplikasi Perhitungan
             const textElement = document.getElementById('saldo-last-calc-' + counterId);
             if (!textElement) return;
             const textToCopy = textElement.innerText.trim();
-            if (!textToCopy) {
-                showToast('Tidak ada data untuk dicopy!', 'warning');
-                return;
-            }
+            if (!textToCopy) { showToast('Tidak ada data untuk dicopy!', 'warning'); return; }
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(textToCopy)
                     .then(() => showToast('Data berhasil dicopy!'))
                     .catch(() => fallbackCopy(textToCopy));
-            } else {
-                fallbackCopy(textToCopy);
-            }
+            } else { fallbackCopy(textToCopy); }
         });
 
         function fallbackCopy(text) {
@@ -536,20 +502,13 @@ Aplikasi Perhitungan
             ta.value = text;
             ta.style.cssText = 'position:fixed;top:-30vh;left:-100vw;';
             document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            try {
-                document.execCommand('copy') ? showToast('Data berhasil dicopy!') : showToast('Gagal copy!', 'danger');
-            } catch (e) {
-                showToast('Browser tidak mendukung copy otomatis', 'danger');
-            }
+            ta.focus(); ta.select();
+            try { document.execCommand('copy') ? showToast('Data berhasil dicopy!') : showToast('Gagal copy!', 'danger'); } 
+            catch (e) { showToast('Browser tidak mendukung copy otomatis', 'danger'); }
             document.body.removeChild(ta);
         }
     });
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    //  COUNTER (plus/minus)
-    // ─────────────────────────────────────────────────────────────────────────────
     $(document).ready(function() {
         let timeout = null;
         $(".counter-btn").click(function() {
@@ -573,19 +532,12 @@ Aplikasi Perhitungan
                 url: "<?= site_url('Home/update') ?>",
                 type: "POST",
                 data: data,
-                success: function() {
-                    showToast("Counter updated!");
-                },
-                error: function() {
-                    showToast("Error updating counters!", "danger");
-                }
+                success: function() { showToast("Counter updated!"); },
+                error: function() { showToast("Error updating counters!", "danger"); }
             });
         }
     });
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    //  PARKIR
-    // ─────────────────────────────────────────────────────────────────────────────
     $(document).ready(function() {
         const $input = $('#jamMasuk');
         $input.on('input', function() {
@@ -597,15 +549,9 @@ Aplikasi Perhitungan
 
         function hitungBiayaParkir() {
             const jamMasuk = $input.val();
-            if (!/^\d{2}\.\d{2}$/.test(jamMasuk)) {
-                showToast("Format jam tidak valid! Gunakan HH.MM", "warning");
-                return;
-            }
+            if (!/^\d{2}\.\d{2}$/.test(jamMasuk)) { showToast("Format jam tidak valid! Gunakan HH.MM", "warning"); return; }
             let [jam, menit] = jamMasuk.split('.').map(Number);
-            if (jam > 23 || menit > 59) {
-                showToast("Jam atau menit tidak valid!", "warning");
-                return;
-            }
+            if (jam > 23 || menit > 59) { showToast("Jam atau menit tidak valid!", "warning"); return; }
             const now = new Date();
             let totalMenitMasuk = jam * 60 + menit;
             let totalMenitSekarang = now.getHours() * 60 + now.getMinutes();
@@ -615,39 +561,19 @@ Aplikasi Perhitungan
             let biaya = jamTerparkir <= 1 ? 2000 : Math.min(2000 + (jamTerparkir - 1) * 1000, 8000);
             $('#durasiParkir').text(jamTerparkir + ' jam');
             $('#biayaParkir').text('Rp ' + biaya.toLocaleString('id-ID'));
-            $('#waktuSekarang').text('Waktu Sekarang: ' + now.toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit'
-            }));
+            $('#waktuSekarang').text('Waktu Sekarang: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
             $('#hasilParkir').fadeIn();
         }
     });
 
     // ─────────────────────────────────────────────────────────────────────────────
-    //  SERIES TRACKER
+    //  SERIES TRACKER - UPDATED LOGIC
     // ─────────────────────────────────────────────────────────────────────────────
     $(document).ready(function() {
 
         const BASE_URL = "<?= site_url() ?>";
         let deleteId = null;
-        let editData = null; // objek series saat mode edit
-
-        // ── TYPE BADGE ──────────────────────────────────────────────
-        const TYPE_LABELS = {
-            series: 'Series',
-            anime: 'Anime',
-            movie: 'Movie',
-            documentary: 'Dokumenter'
-        };
-        const TYPE_COLORS = {
-            series: 'primary',
-            anime: 'warning',
-            movie: 'info',
-            documentary: 'success'
-        };
-
-        // ── STATUS EP ───────────────────────────────────────────────
-        const EP_STATUS_CLASS = ['', 'watching', 'done']; // 0=none,1=orange,2=hijau
+        let editData = null; 
 
         // ── LOAD LIST ───────────────────────────────────────────────
         function loadSeriesList() {
@@ -676,33 +602,48 @@ Aplikasi Perhitungan
         }
 
         function buildSeriesCard(series) {
-            const typeLabel = TYPE_LABELS[series.type] || series.type;
-            const typeColor = TYPE_COLORS[series.type] || 'secondary';
+            // Hitung progress global & Season Aktif (current season)
+            let totalEp = 0, doneEp = 0;
+            let currentSeason = 1;
 
-            // Hitung progress global
-            let totalEp = 0,
-                doneEp = 0;
             (series.seasons || []).forEach(function(season) {
+                let hasWatched = false;
                 (season.episodes || []).forEach(function(ep) {
                     totalEp++;
-                    if (ep.status == 2) doneEp++;
+                    if (ep.status == 2) {
+                        doneEp++;
+                        hasWatched = true;
+                    }
                 });
+                if (hasWatched) {
+                    currentSeason = season.season_num;
+                }
             });
+
             const pct = totalEp > 0 ? Math.round(doneEp / totalEp * 100) : 0;
             const ratingStr = series.rating ? '★'.repeat(Math.round(series.rating / 2)) + '<span class="text-muted" style="font-size:11px"> ' + series.rating + '/10</span>' : '';
             const notesStr = series.notes ? `<div class="series-notes">${escHtml(series.notes)}</div>` : '';
 
+            // Dropdown untuk Season (hanya tampil jika > 1 season)
+            let seasonSelector = '';
+            if ((series.seasons || []).length > 1) {
+                let opts = series.seasons.map(s => `<option value="${s.season_num}" ${s.season_num == currentSeason ? 'selected' : ''}>Season ${s.season_num}</option>`).join('');
+                seasonSelector = `<select class="form-control form-control-sm season-selector" data-series-id="${series.id}" style="width:120px; display:inline-block; font-weight:bold; color:#6777ef;">${opts}</select>`;
+            }
+
             // Bangun season blocks
-            let seasonsHtml = '';
+            let seasonsHtml = seasonSelector;
             (series.seasons || []).forEach(function(season) {
                 let epsHtml = (season.episodes || []).map(function(ep) {
-                    const cls = EP_STATUS_CLASS[ep.status] || '';
-                    return `<button class="ep-btn ${cls}" data-ep-id="${ep.id}" data-series-id="${series.id}" title="Episode ${ep.ep_num}">${ep.ep_num}</button>`;
+                    const cls = ep.status == 2 ? 'done' : '';
+                    return `<button class="ep-btn ${cls}" data-ep-id="${ep.id}" data-series-id="${series.id}" data-season-num="${season.season_num}" data-ep-num="${ep.ep_num}" title="Episode ${ep.ep_num}">${ep.ep_num}</button>`;
                 }).join('');
 
+                let isHidden = season.season_num != currentSeason ? 'display:none;' : '';
+                
                 seasonsHtml += `
-                <div class="season-block">
-                    <div class="season-label">Season ${season.season_num}</div>
+                <div class="season-block season-block-${series.id}" data-season="${season.season_num}" style="${isHidden}">
+                    ${(series.seasons || []).length <= 1 ? `<div class="season-label">Season ${season.season_num}</div>` : ''}
                     <div class="ep-grid">${epsHtml}</div>
                 </div>`;
             });
@@ -716,14 +657,16 @@ Aplikasi Perhitungan
             <div class="card-body pb-2">
                 <div class="d-flex justify-content-between align-items-start mb-1">
                     <div>
-                        <h5 class="mb-0 font-weight-bold">${escHtml(series.title)}</h5>
-                        <span class="badge badge-${typeColor} series-type-badge">${typeLabel}</span>
+                        <h5 class="mb-0 font-weight-bold text-primary">${escHtml(series.title)}</h5>
                         ${notesStr}
                     </div>
                     <div class="d-flex align-items-center" style="gap:6px;">
-                        ${ratingStr ? `<span class="rating-display">${ratingStr}</span>` : ''}
+                        ${ratingStr ? `<span class="rating-display mr-2">${ratingStr}</span>` : ''}
                         <button class="btn btn-sm btn-outline-primary btn-edit-series" data-id="${series.id}" title="Edit">
                             <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning btn-disable-series" data-id="${series.id}" title="Arsipkan/Hide">
+                            <i class="fas fa-eye-slash"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger btn-delete-series" data-id="${series.id}" data-title="${escHtml(series.title)}" title="Hapus">
                             <i class="fas fa-trash"></i>
@@ -732,10 +675,10 @@ Aplikasi Perhitungan
                 </div>
 
                 <!-- Progress bar -->
-                <div class="series-progress-bar mb-2">
+                <div class="series-progress-bar mb-2 mt-2">
                     <div class="fill" style="width:${pct}%"></div>
                 </div>
-                <div style="font-size:11px;color:#aaa;margin-bottom:8px;">${doneEp} / ${totalEp} episode selesai (${pct}%)</div>
+                <div class="series-progress-text" style="font-size:11px;color:#aaa;margin-bottom:8px;">${doneEp} / ${totalEp} episode selesai (${pct}%)</div>
 
                 ${seasonsHtml}
             </div>
@@ -744,37 +687,70 @@ Aplikasi Perhitungan
 
         function escHtml(str) {
             if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
-        // ── EPISODE TOGGLE ──────────────────────────────────────────
+        // ── SEASON SELECTOR TOGGLE ──────────────────────────────────
+        $(document).on('change', '.season-selector', function() {
+            const sId = $(this).data('series-id');
+            const val = $(this).val();
+            $(`.season-block-${sId}`).hide();
+            $(`.season-block-${sId}[data-season="${val}"]`).fadeIn();
+        });
+
+        // ── EPISODE TOGGLE BATCH LOGIC ──────────────────────────────
+        let pendingEpisodeUpdates = {};
+        let episodeSaveTimeout = null;
+
         $(document).on('click', '.ep-btn', function() {
             const $btn = $(this);
-            const epId = $btn.data('ep-id');
-            $btn.prop('disabled', true);
+            const seriesId = $btn.data('series-id');
+            const targetSeason = parseInt($btn.data('season-num'));
+            const targetEp = parseInt($btn.data('ep-num'));
+
+            // Set semua episode <= target menjadi done(hijau), sisanya hapus class
+            $(`.ep-btn[data-series-id="${seriesId}"]`).each(function() {
+                const sNum = parseInt($(this).data('season-num'));
+                const eNum = parseInt($(this).data('ep-num'));
+                const epId = $(this).data('ep-id');
+
+                let newStatus = 0;
+                if (sNum < targetSeason || (sNum === targetSeason && eNum <= targetEp)) {
+                    newStatus = 2; // hijau / done
+                    $(this).addClass('done');
+                } else {
+                    $(this).removeClass('done');
+                }
+                
+                pendingEpisodeUpdates[epId] = newStatus;
+            });
+
+            // Update local progress bar
+            refreshProgressBar(seriesId);
+
+            // Debounce save 3 detik
+            clearTimeout(episodeSaveTimeout);
+            episodeSaveTimeout = setTimeout(savePendingEpisodes, 3000);
+        });
+
+        function savePendingEpisodes() {
+            if (Object.keys(pendingEpisodeUpdates).length === 0) return;
+
+            let updatesToSend = { ...pendingEpisodeUpdates };
+            pendingEpisodeUpdates = {}; 
+
             $.ajax({
-                url: BASE_URL + 'series/episode/toggle',
+                url: BASE_URL + 'series/episodes/batch-update',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({
-                    episode_id: epId
-                }),
+                data: JSON.stringify({ updates: updatesToSend }),
                 success: function(res) {
-                    if (res.success) {
-                        $btn.removeClass('watching done');
-                        if (res.new_status == 1) $btn.addClass('watching');
-                        if (res.new_status == 2) $btn.addClass('done');
-                        // Update progress bar
-                        refreshProgressBar($btn.data('series-id'));
+                    if (!res.success) {
+                        showToast('Gagal menyimpan progress!', 'danger');
                     }
-                },
-                complete: function() {
-                    $btn.prop('disabled', false);
                 }
             });
-        });
+        }
 
         function refreshProgressBar(seriesId) {
             const $card = $('#series-card-' + seriesId);
@@ -782,13 +758,11 @@ Aplikasi Perhitungan
             const done = $card.find('.ep-btn.done').length;
             const pct = total > 0 ? Math.round(done / total * 100) : 0;
             $card.find('.series-progress-bar .fill').css('width', pct + '%');
-            $card.find('.series-progress-bar').siblings('div[style*="font-size:11px"]')
-                .text(`${done} / ${total} episode selesai (${pct}%)`);
+            $card.find('.series-progress-text').text(`${done} / ${total} episode selesai (${pct}%)`);
         }
 
         // ── MODAL: SEASON FORM BUILDER ───────────────────────────────
         let seasonRowCount = 0;
-
         function addSeasonRow(seasonNum, totalEps, existingEpisodes) {
             seasonRowCount++;
             const rowId = 'season-row-' + seasonRowCount;
@@ -821,7 +795,6 @@ Aplikasi Perhitungan
         $(document).on('click', '.btn-remove-season', function() {
             const rowId = $(this).data('row');
             $('#' + rowId).remove();
-            // Re-nomori label season
             $('#seasons-form-container .season-form-row').each(function(idx) {
                 $(this).find('.season-num-label').text('Season ' + (idx + 1));
                 $(this).find('.season-eps-input').data('season-num', idx + 1).attr('data-season-num', idx + 1);
@@ -837,9 +810,12 @@ Aplikasi Perhitungan
             editData = null;
             $('#series-edit-id').val('');
             $('#series-title').val('');
-            $('#series-type').val('series');
             $('#series-notes').val('');
             $('#series-rating').val('');
+            $('#series-watched-season').val('1');
+            $('#series-watched-episode').val('1');
+            $('#watched-input-row').show(); // Tampilkan input default saat Add
+
             resetSeasonForm();
             addSeasonRow(1, '');
             $('#modalSeriesLabel').text('Tambah Series');
@@ -857,9 +833,9 @@ Aplikasi Perhitungan
                 editData = series;
                 $('#series-edit-id').val(series.id);
                 $('#series-title').val(series.title);
-                $('#series-type').val(series.type);
                 $('#series-notes').val(series.notes || '');
                 $('#series-rating').val(series.rating || '');
+                $('#watched-input-row').hide(); // Sembunyikan input default saat Edit
 
                 resetSeasonForm();
                 (series.seasons || []).forEach(function(season) {
@@ -883,7 +859,6 @@ Aplikasi Perhitungan
                 return;
             }
 
-            // Kumpulkan data seasons
             const seasons = [];
             $('#seasons-form-container .season-form-row').each(function(idx) {
                 const totalEps = parseInt($(this).find('.season-eps-input').val());
@@ -892,16 +867,18 @@ Aplikasi Perhitungan
                 seasons.push({
                     season_num: idx + 1,
                     total_eps: totalEps,
-                    episodes: existingEps // kirim balik agar status tetap
+                    episodes: existingEps
                 });
             });
 
             const payload = {
                 title: title,
-                type: $('#series-type').val(),
+                type: 'series', // hardcode default ke series (menghapus anime/film)
                 notes: $('#series-notes').val().trim() || null,
                 rating: $('#series-rating').val() || null,
                 seasons: seasons,
+                watched_season: $('#series-watched-season').val(),
+                watched_episode: $('#series-watched-episode').val()
             };
 
             const url = editId ? BASE_URL + 'series/update/' + editId : BASE_URL + 'series/store';
@@ -922,13 +899,28 @@ Aplikasi Perhitungan
                         showToast(res.message || 'Gagal menyimpan', 'danger');
                     }
                 },
-                error: function() {
-                    showToast('Terjadi kesalahan pada server!', 'danger');
-                },
-                complete: function() {
-                    $('#btn-save-series').prop('disabled', false);
-                }
+                error: function() { showToast('Terjadi kesalahan pada server!', 'danger'); },
+                complete: function() { $('#btn-save-series').prop('disabled', false); }
             });
+        });
+
+        // ── ARSIP / DISABLE ──────────────────────────────────────────
+        $(document).on('click', '.btn-disable-series', function() {
+            const id = $(this).data('id');
+            if(confirm('Arsipkan/sembunyikan series ini dari list utama?')) {
+                $.ajax({
+                    url: BASE_URL + 'series/disable/' + id,
+                    type: 'POST',
+                    success: function(res) {
+                        if(res.success) {
+                            showToast('Series berhasil diarsipkan!');
+                            loadSeriesList();
+                        } else {
+                            showToast('Gagal arsip series', 'danger');
+                        }
+                    }
+                });
+            }
         });
 
         // ── HAPUS ────────────────────────────────────────────────────
@@ -953,9 +945,7 @@ Aplikasi Perhitungan
                         showToast(res.message || 'Gagal hapus', 'danger');
                     }
                 },
-                error: function() {
-                    showToast('Terjadi kesalahan pada server!', 'danger');
-                },
+                error: function() { showToast('Terjadi kesalahan pada server!', 'danger'); },
                 complete: function() {
                     $('#btn-confirm-delete').prop('disabled', false);
                     deleteId = null;
