@@ -389,6 +389,16 @@ Aplikasi Perhitungan
                 <div id="seasons-form-container">
                     <!-- Season rows diisi JS -->
                 </div>
+
+                <!-- ═════ TAMBAHKAN SECTION INI ═════ -->
+                <hr id="divider-disabled-series" style="border-top: 2px dashed #c8cbd5; margin: 30px 0 20px 0;">
+                <div id="section-disabled-series">
+                    <h6 class="font-weight-bold text-secondary mb-3"><i class="fas fa-archive"></i> Arsip Series (Disabled)</h6>
+                    <div id="disabled-series-list" class="list-group">
+                        <!-- List dari DB diisi via JS -->
+                    </div>
+                </div>
+                <!-- ═════════════════════════════════ -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -467,7 +477,11 @@ Aplikasi Perhitungan
             $.ajax({
                 url: "<?= site_url('Home/updateSaldo') ?>",
                 type: "POST",
-                data: { counter_id: counterId, action: action, amount: inputVal },
+                data: {
+                    counter_id: counterId,
+                    action: action,
+                    amount: inputVal
+                },
                 success: function(response) {
                     if (response.success) {
                         $('#saldo-amount-' + response.counter_id).text(response.new_amount_format);
@@ -479,8 +493,12 @@ Aplikasi Perhitungan
                         showToast(response.message || 'Gagal update data', 'danger');
                     }
                 },
-                error: function() { showToast('Terjadi kesalahan pada server!', 'danger'); },
-                complete: function() { buttons.prop('disabled', false); }
+                error: function() {
+                    showToast('Terjadi kesalahan pada server!', 'danger');
+                },
+                complete: function() {
+                    buttons.prop('disabled', false);
+                }
             });
         });
 
@@ -489,12 +507,17 @@ Aplikasi Perhitungan
             const textElement = document.getElementById('saldo-last-calc-' + counterId);
             if (!textElement) return;
             const textToCopy = textElement.innerText.trim();
-            if (!textToCopy) { showToast('Tidak ada data untuk dicopy!', 'warning'); return; }
+            if (!textToCopy) {
+                showToast('Tidak ada data untuk dicopy!', 'warning');
+                return;
+            }
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(textToCopy)
                     .then(() => showToast('Data berhasil dicopy!'))
                     .catch(() => fallbackCopy(textToCopy));
-            } else { fallbackCopy(textToCopy); }
+            } else {
+                fallbackCopy(textToCopy);
+            }
         });
 
         function fallbackCopy(text) {
@@ -502,9 +525,13 @@ Aplikasi Perhitungan
             ta.value = text;
             ta.style.cssText = 'position:fixed;top:-30vh;left:-100vw;';
             document.body.appendChild(ta);
-            ta.focus(); ta.select();
-            try { document.execCommand('copy') ? showToast('Data berhasil dicopy!') : showToast('Gagal copy!', 'danger'); } 
-            catch (e) { showToast('Browser tidak mendukung copy otomatis', 'danger'); }
+            ta.focus();
+            ta.select();
+            try {
+                document.execCommand('copy') ? showToast('Data berhasil dicopy!') : showToast('Gagal copy!', 'danger');
+            } catch (e) {
+                showToast('Browser tidak mendukung copy otomatis', 'danger');
+            }
             document.body.removeChild(ta);
         }
     });
@@ -532,8 +559,12 @@ Aplikasi Perhitungan
                 url: "<?= site_url('Home/update') ?>",
                 type: "POST",
                 data: data,
-                success: function() { showToast("Counter updated!"); },
-                error: function() { showToast("Error updating counters!", "danger"); }
+                success: function() {
+                    showToast("Counter updated!");
+                },
+                error: function() {
+                    showToast("Error updating counters!", "danger");
+                }
             });
         }
     });
@@ -549,9 +580,15 @@ Aplikasi Perhitungan
 
         function hitungBiayaParkir() {
             const jamMasuk = $input.val();
-            if (!/^\d{2}\.\d{2}$/.test(jamMasuk)) { showToast("Format jam tidak valid! Gunakan HH.MM", "warning"); return; }
+            if (!/^\d{2}\.\d{2}$/.test(jamMasuk)) {
+                showToast("Format jam tidak valid! Gunakan HH.MM", "warning");
+                return;
+            }
             let [jam, menit] = jamMasuk.split('.').map(Number);
-            if (jam > 23 || menit > 59) { showToast("Jam atau menit tidak valid!", "warning"); return; }
+            if (jam > 23 || menit > 59) {
+                showToast("Jam atau menit tidak valid!", "warning");
+                return;
+            }
             const now = new Date();
             let totalMenitMasuk = jam * 60 + menit;
             let totalMenitSekarang = now.getHours() * 60 + now.getMinutes();
@@ -561,7 +598,10 @@ Aplikasi Perhitungan
             let biaya = jamTerparkir <= 1 ? 2000 : Math.min(2000 + (jamTerparkir - 1) * 1000, 8000);
             $('#durasiParkir').text(jamTerparkir + ' jam');
             $('#biayaParkir').text('Rp ' + biaya.toLocaleString('id-ID'));
-            $('#waktuSekarang').text('Waktu Sekarang: ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
+            $('#waktuSekarang').text('Waktu Sekarang: ' + now.toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit'
+            }));
             $('#hasilParkir').fadeIn();
         }
     });
@@ -573,7 +613,7 @@ Aplikasi Perhitungan
 
         const BASE_URL = "<?= site_url() ?>";
         let deleteId = null;
-        let editData = null; 
+        let editData = null;
 
         // ── LOAD LIST ───────────────────────────────────────────────
         function loadSeriesList() {
@@ -603,7 +643,8 @@ Aplikasi Perhitungan
 
         function buildSeriesCard(series) {
             // Hitung progress global & Season Aktif (current season)
-            let totalEp = 0, doneEp = 0;
+            let totalEp = 0,
+                doneEp = 0;
             let currentSeason = 1;
 
             (series.seasons || []).forEach(function(season) {
@@ -640,7 +681,7 @@ Aplikasi Perhitungan
                 }).join('');
 
                 let isHidden = season.season_num != currentSeason ? 'display:none;' : '';
-                
+
                 seasonsHtml += `
                 <div class="season-block season-block-${series.id}" data-season="${season.season_num}" style="${isHidden}">
                     ${(series.seasons || []).length <= 1 ? `<div class="season-label">Season ${season.season_num}</div>` : ''}
@@ -688,7 +729,58 @@ Aplikasi Perhitungan
         function escHtml(str) {
             if (!str) return '';
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        } // ── LOAD DISABLED SERIES ────────────────────────────────────
+        function loadDisabledSeries() {
+            $.get(BASE_URL + 'series/list-disabled', function(res) {
+                const $container = $('#disabled-series-list');
+                $container.empty();
+
+                if (!res.success || res.data.length === 0) {
+                    $container.append('<p class="text-muted small mb-0">Tidak ada series yang diarsipkan.</p>');
+                    return;
+                }
+
+                res.data.forEach(function(s) {
+                    $container.append(`
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 mb-2 border" style="border-radius:6px;">
+                            <div>
+                                <h6 class="mb-0 text-dark">${escHtml(s.title)}</h6>
+                                ${s.notes ? `<small class="text-muted">${escHtml(s.notes)}</small>` : ''}
+                            </div>
+                            <button type="button" class="btn btn-sm btn-success btn-restore-series" data-id="${s.id}" title="Kembalikan (Enable)">
+                                <i class="fas fa-undo mr-1"></i> Restore
+                            </button>
+                        </div>
+                    `);
+                });
+            });
         }
+
+        // ── KEMBALIKAN (RESTORE) SERIES ─────────────────────────────
+        $(document).on('click', '.btn-restore-series', function() {
+            const id = $(this).data('id');
+            const $btn = $(this);
+            $btn.prop('disabled', true);
+
+            $.ajax({
+                url: BASE_URL + 'series/restore/' + id,
+                type: 'POST',
+                success: function(res) {
+                    if (res.success) {
+                        showToast('Series berhasil dikembalikan ke list utama!');
+                        loadDisabledSeries(); // Refresh list arsip
+                        loadSeriesList(); // Refresh list utama di background
+                    } else {
+                        showToast('Gagal mengembalikan series', 'danger');
+                        $btn.prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    showToast('Terjadi kesalahan pada server!', 'danger');
+                    $btn.prop('disabled', false);
+                }
+            });
+        });
 
         // ── SEASON SELECTOR TOGGLE ──────────────────────────────────
         $(document).on('change', '.season-selector', function() {
@@ -721,7 +813,7 @@ Aplikasi Perhitungan
                 } else {
                     $(this).removeClass('done');
                 }
-                
+
                 pendingEpisodeUpdates[epId] = newStatus;
             });
 
@@ -736,14 +828,18 @@ Aplikasi Perhitungan
         function savePendingEpisodes() {
             if (Object.keys(pendingEpisodeUpdates).length === 0) return;
 
-            let updatesToSend = { ...pendingEpisodeUpdates };
-            pendingEpisodeUpdates = {}; 
+            let updatesToSend = {
+                ...pendingEpisodeUpdates
+            };
+            pendingEpisodeUpdates = {};
 
             $.ajax({
                 url: BASE_URL + 'series/episodes/batch-update',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ updates: updatesToSend }),
+                data: JSON.stringify({
+                    updates: updatesToSend
+                }),
                 success: function(res) {
                     if (!res.success) {
                         showToast('Gagal menyimpan progress!', 'danger');
@@ -763,6 +859,7 @@ Aplikasi Perhitungan
 
         // ── MODAL: SEASON FORM BUILDER ───────────────────────────────
         let seasonRowCount = 0;
+
         function addSeasonRow(seasonNum, totalEps, existingEpisodes) {
             seasonRowCount++;
             const rowId = 'season-row-' + seasonRowCount;
@@ -806,6 +903,7 @@ Aplikasi Perhitungan
         });
 
         // ── BUKA MODAL TAMBAH ───────────────────────────────────────
+        // ── BUKA MODAL TAMBAH ───────────────────────────────────────
         $('#btn-open-add-series').click(function() {
             editData = null;
             $('#series-edit-id').val('');
@@ -814,12 +912,47 @@ Aplikasi Perhitungan
             $('#series-rating').val('');
             $('#series-watched-season').val('1');
             $('#series-watched-episode').val('1');
-            $('#watched-input-row').show(); // Tampilkan input default saat Add
+            $('#watched-input-row').show();
+
+            // Tampilkan section arsip & load datanya
+            $('#divider-disabled-series').show();
+            $('#section-disabled-series').show();
+            loadDisabledSeries();
 
             resetSeasonForm();
             addSeasonRow(1, '');
             $('#modalSeriesLabel').text('Tambah Series');
             $('#modalSeries').modal('show');
+        });
+
+        // ── BUKA MODAL EDIT ─────────────────────────────────────────
+        $(document).on('click', '.btn-edit-series', function() {
+            const id = $(this).data('id');
+            $.get(BASE_URL + 'series/list', function(res) {
+                if (!res.success) return;
+                const series = res.data.find(s => s.id == id);
+                if (!series) return;
+
+                editData = series;
+                $('#series-edit-id').val(series.id);
+                $('#series-title').val(series.title);
+                $('#series-notes').val(series.notes || '');
+                $('#series-rating').val(series.rating || '');
+                $('#watched-input-row').hide();
+
+                // Sembunyikan section arsip saat edit
+                $('#divider-disabled-series').hide();
+                $('#section-disabled-series').hide();
+
+                resetSeasonForm();
+                (series.seasons || []).forEach(function(season) {
+                    addSeasonRow(season.season_num, season.total_eps, season.episodes);
+                });
+                if ((series.seasons || []).length === 0) addSeasonRow(1, '');
+
+                $('#modalSeriesLabel').text('Edit Series');
+                $('#modalSeries').modal('show');
+            });
         });
 
         // ── BUKA MODAL EDIT ─────────────────────────────────────────
@@ -899,20 +1032,24 @@ Aplikasi Perhitungan
                         showToast(res.message || 'Gagal menyimpan', 'danger');
                     }
                 },
-                error: function() { showToast('Terjadi kesalahan pada server!', 'danger'); },
-                complete: function() { $('#btn-save-series').prop('disabled', false); }
+                error: function() {
+                    showToast('Terjadi kesalahan pada server!', 'danger');
+                },
+                complete: function() {
+                    $('#btn-save-series').prop('disabled', false);
+                }
             });
         });
 
         // ── ARSIP / DISABLE ──────────────────────────────────────────
         $(document).on('click', '.btn-disable-series', function() {
             const id = $(this).data('id');
-            if(confirm('Arsipkan/sembunyikan series ini dari list utama?')) {
+            if (confirm('Arsipkan/sembunyikan series ini dari list utama?')) {
                 $.ajax({
                     url: BASE_URL + 'series/disable/' + id,
                     type: 'POST',
                     success: function(res) {
-                        if(res.success) {
+                        if (res.success) {
                             showToast('Series berhasil diarsipkan!');
                             loadSeriesList();
                         } else {
@@ -945,7 +1082,9 @@ Aplikasi Perhitungan
                         showToast(res.message || 'Gagal hapus', 'danger');
                     }
                 },
-                error: function() { showToast('Terjadi kesalahan pada server!', 'danger'); },
+                error: function() {
+                    showToast('Terjadi kesalahan pada server!', 'danger');
+                },
                 complete: function() {
                     $('#btn-confirm-delete').prop('disabled', false);
                     deleteId = null;

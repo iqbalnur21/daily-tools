@@ -221,5 +221,32 @@ class SeriesController extends BaseController
         }
 
         return $this->response->setJSON(['success' => true]);
+    } // -------------------------------------------------------
+    // GET /series/list-disabled
+    // Mengambil semua series yang status disabled = 1
+    // -------------------------------------------------------
+    public function listDisabled()
+    {
+        $seriesList = $this->series->where('disabled', 1)->orderBy('title', 'ASC')->findAll();
+
+        return $this->response->setJSON(['success' => true, 'data' => $seriesList]);
+    }
+
+    // -------------------------------------------------------
+    // POST /series/restore/{id}
+    // Mengembalikan status disabled menjadi 0 agar tampil di list utama
+    // -------------------------------------------------------
+    public function restore($id)
+    {
+        $series = $this->series->find($id);
+        if (!$series) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Data tidak ditemukan']);
+        }
+
+        // Set disabled kembali ke 0 (aktif). 
+        // Ubah menjadi 2 jika sistem kamu mewajibkan angka 2.
+        $this->series->update($id, ['disabled' => 0]);
+
+        return $this->response->setJSON(['success' => true]);
     }
 }

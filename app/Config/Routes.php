@@ -39,6 +39,8 @@ $routes->post('series/store', 'SeriesController::store');
 $routes->put('series/update/(:num)', 'SeriesController::update/$1');
 $routes->delete('series/delete/(:num)', 'SeriesController::delete/$1');
 $routes->post('series/episode/toggle', 'SeriesController::toggleEpisode');
+$routes->get('series/list-disabled', 'SeriesController::listDisabled');
+$routes->post('series/restore/(:num)', 'SeriesController::restore/$1');
 /*
  * --------------------------------------------------------------------
  * Additional Routing
