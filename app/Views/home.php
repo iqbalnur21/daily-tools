@@ -841,9 +841,16 @@ Aplikasi Perhitungan
                     updates: updatesToSend
                 }),
                 success: function(res) {
-                    if (!res.success) {
+                    if (res.success) {
+                        // Tambahkan toast success di sini
+                        showToast('Progress episode berhasil disimpan!');
+                    } else {
                         showToast('Gagal menyimpan progress!', 'danger');
                     }
+                },
+                error: function() {
+                    // Tambahkan error handler opsional agar lebih aman
+                    showToast('Terjadi kesalahan pada server saat menyimpan!', 'danger');
                 }
             });
         }

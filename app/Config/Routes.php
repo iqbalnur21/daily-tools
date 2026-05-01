@@ -37,6 +37,7 @@ $routes->get('/', 'Home::index');
 $routes->get('series/list', 'SeriesController::list');
 $routes->post('series/store', 'SeriesController::store');
 $routes->put('series/update/(:num)', 'SeriesController::update/$1');
+$routes->post('series/episodes/batch-update', 'SeriesController::batchUpdateEpisodes');
 $routes->delete('series/delete/(:num)', 'SeriesController::delete/$1');
 $routes->post('series/episode/toggle', 'SeriesController::toggleEpisode');
 $routes->get('series/list-disabled', 'SeriesController::listDisabled');
