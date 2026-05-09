@@ -41,6 +41,7 @@ $routes->post('series/episodes/batch-update', 'SeriesController::batchUpdateEpis
 $routes->delete('series/delete/(:num)', 'SeriesController::delete/$1');
 $routes->post('series/episode/toggle', 'SeriesController::toggleEpisode');
 $routes->get('series/list-disabled', 'SeriesController::listDisabled');
+$routes->post('series/disable/(:num)', 'SeriesController::disable/$1');
 $routes->post('series/restore/(:num)', 'SeriesController::restore/$1');
 /*
  * --------------------------------------------------------------------
