@@ -182,10 +182,10 @@ Aplikasi Perhitungan
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
-         KOMPONEN SALDO  (sudah ada, tidak berubah)
+         1. KOMPONEN SALDO NIA
     ════════════════════════════════════════════════════════ -->
     <?php foreach ($counters as $saldoData): ?>
-        <?php if (stripos($saldoData['counter_name'], 'Saldo') !== false): ?>
+        <?php if ($saldoData['counter_name'] === 'Saldo Nia'): ?>
             <div class="card shadow-sm border-primary mb-4">
                 <div class="card-header bg-primary text-white">
                     <h4 class="text-white">Informasi <?= esc($saldoData['counter_name']) ?></h4>
@@ -224,20 +224,30 @@ Aplikasi Perhitungan
     <?php endforeach; ?>
 
     <!-- ═══════════════════════════════════════════════════════
-         KOMPONEN COUNTER (Hutang / Ganti Puasa / Qada Solat)
+         2. KOMPONEN SERIES TRACKER
+    ════════════════════════════════════════════════════════ -->
+    <div class="card series-card mt-0 mb-4 shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-tv mr-2"></i> Pelacak Series</h4>
+            <button class="btn btn-light btn-sm font-weight-bold" id="btn-open-add-series">
+                <i class="fas fa-plus mr-1"></i> Tambah
+            </button>
+        </div>
+        <div class="card-body" id="series-list-container">
+            <div class="series-empty" id="series-empty-state">
+                <i class="fas fa-film"></i>
+                Belum ada data. Klik <strong>Tambah</strong> untuk mulai mencatat.
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         3. & 4. KOMPONEN COUNTER (Ganti Puasa / Qada Solat)
     ════════════════════════════════════════════════════════ -->
     <div class="section-body">
-        <?php
-        $count = 0;
-        foreach ($counters as $key => $value):
-            if (stripos($value['counter_name'], 'Saldo') !== false) continue;
-            if (stripos($value['counter_name'], 'Parkir') !== false) continue;
-        ?>
-            <?php if (
-                $value['counter_name'] == "Hutang Galon" ||
-                $value['counter_name'] == "Ganti Puasa"  ||
-                $value['counter_name'] == "Ganti Puasa Nia"
-            ): ?>
+        <!-- Ganti Puasa -->
+        <?php foreach ($counters as $key => $value): ?>
+            <?php if ($value['counter_name'] == "Ganti Puasa" || $value['counter_name'] == "Ganti Puasa Nia"): ?>
                 <div class="card">
                     <div class="card-header">
                         <h4><?= $value['counter_name'] ?></h4>
@@ -255,8 +265,16 @@ Aplikasi Perhitungan
                         </div>
                     </div>
                 </div>
-            <?php else: ?>
-                <div class="card <?= $count != 4 ? 'mb-0' : '' ?>">
+            <?php endif; ?>
+        <?php endforeach; ?>
+
+        <!-- Qada Solat -->
+        <?php
+        $count = 0;
+        foreach ($counters as $key => $value):
+            if (in_array($value['counter_name'], ['Subuh', 'Zuhur', 'Ashar', 'Magrib', 'Isya'])):
+        ?>
+                <div class="card <?= $count != 4 ? 'mb-0' : 'mb-4' ?>">
                     <?php $count++;
                     if ($count == 1): ?>
                         <div class="card-header">
@@ -279,58 +297,104 @@ Aplikasi Perhitungan
                         </div>
                     </div>
                 </div>
+        <?php 
+            endif;
+        endforeach; 
+        ?>
+
+        <!-- LAINNYA: Saldo Tira, Hutang Galon, dll. -->
+        <?php foreach ($counters as $saldoData): ?>
+            <?php if ($saldoData['counter_name'] === 'Saldo Tira'): ?>
+                <div class="card shadow-sm border-primary mb-4 mt-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="text-white">Informasi <?= esc($saldoData['counter_name']) ?></h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <h1 class="text-primary mb-4">Rp <span id="saldo-amount-<?= $saldoData['counter_id'] ?>"><?= number_format($saldoData['amount'], 0, ',', '.') ?></span></h1>
+                        <div class="form-group">
+                            <label>Nominal (otomatis bernilai ribuan)</label>
+                            <div class="input-group mb-3" style="max-width: 350px; margin: auto;">
+                                <div class="input-group-prepend"><span class="input-group-text font-weight-bold">Rp</span></div>
+                                <input type="number" id="input-saldo-<?= $saldoData['counter_id'] ?>" class="form-control text-center text-lg font-weight-bold" placeholder="Contoh: 50" style="font-size: 1.2rem;">
+                                <div class="input-group-append"><span class="input-group-text font-weight-bold">.000</span></div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center mb-4">
+                            <button class="btn btn-danger btn-lg mx-2 btn-saldo-action" data-action="minus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
+                                <i class="fas fa-minus"></i> Kurangi
+                            </button>
+                            <button class="btn btn-success btn-lg mx-2 btn-saldo-action" data-action="plus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
+                                <i class="fas fa-plus"></i> Tambah
+                            </button>
+                        </div>
+                        <div id="saldo-last-calc-container-<?= $saldoData['counter_id'] ?>"
+                            class="alert alert-light border text-left mx-auto position-relative"
+                            style="display: <?= $saldoData['last_calculation'] ? 'block' : 'none' ?>; max-width: 350px; font-size: 16px; font-weight: bold; color: #34395e; background-color:#f9f9f9;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary position-absolute btn-copy-saldo" data-id="<?= $saldoData['counter_id'] ?>" style="top:10px;right:10px;padding:10px;" title="Copy Data">
+                                <i class="fas fa-copy" style="font-size:60px"></i>
+                            </button>
+                            <div id="saldo-last-calc-<?= $saldoData['counter_id'] ?>" style="white-space:pre-line;padding-right:30px;">
+                                <?= $saldoData['last_calculation'] ?? '' ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             <?php endif; ?>
         <?php endforeach; ?>
-    </div>
 
-    <!-- ═══════════════════════════════════════════════════════
-         KOMPONEN PARKIR  (hide jika disabled = 1 di DB)
-    ════════════════════════════════════════════════════════ -->
-    <?php
-    $parkirData = null;
-    foreach ($counters as $c) {
-        if (stripos($c['counter_name'], 'Parkir') !== false) {
-            $parkirData = $c;
-            break;
+        <?php foreach ($counters as $key => $value): ?>
+            <?php if ($value['counter_name'] == "Hutang Galon"): ?>
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h4><?= $value['counter_name'] ?></h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <div class="row" style="justify-content:space-evenly;">
+                                <p class="text-muted">Last Update: <?= timeFormat($value['updated_at']) ?></p>
+                            </div>
+                            <div class="row" style="justify-content:space-evenly;">
+                                <button id="minus-<?= $value['counter_id'] ?>" class="counter-btn btn btn-primary rounded-circle"><i class="fas fa-minus"></i></button>
+                                <span id="counter-<?= $value['counter_id'] ?>" class="counter-text"><?= $value['amount'] ?></span>
+                                <button id="plus-<?= $value['counter_id'] ?>" class="counter-btn btn btn-primary rounded-circle"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        <?php endforeach; ?>
+
+        <!-- ═══════════════════════════════════════════════════════
+             KOMPONEN PARKIR
+        ════════════════════════════════════════════════════════ -->
+        <?php
+        $parkirData = null;
+        foreach ($counters as $c) {
+            if (stripos($c['counter_name'], 'Parkir') !== false) {
+                $parkirData = $c;
+                break;
+            }
         }
-    }
-    if ($parkirData !== null):
-    ?>
-        <div class="card mt-4 shadow-sm">
-            <div class="card-header text-white">
-                <h4>Hitung Biaya Parkir</h4>
-            </div>
-            <div class="card-body">
-                <div class="form-group text-center">
-                    <label for="jamMasuk"><strong>Jam Masuk (HH.MM)</strong></label>
-                    <input type="text" id="jamMasuk" class="form-control text-center mx-auto" maxlength="5"
-                        placeholder="00.00" style="width:150px;font-size:1.2rem;" inputmode="numeric" pattern="[0-9]*">
+        if ($parkirData !== null):
+        ?>
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header text-white">
+                    <h4>Hitung Biaya Parkir</h4>
                 </div>
-                <div id="hasilParkir" class="text-center mt-4" style="display:none;">
-                    <h5 class="mb-2">Durasi Parkir: <span id="durasiParkir" class="text-primary"></span></h5>
-                    <h4 class="text-success">Total Biaya: <span id="biayaParkir"></span></h4>
-                    <p class="text-muted mt-2" id="waktuSekarang"></p>
+                <div class="card-body">
+                    <div class="form-group text-center">
+                        <label for="jamMasuk"><strong>Jam Masuk (HH.MM)</strong></label>
+                        <input type="text" id="jamMasuk" class="form-control text-center mx-auto" maxlength="5"
+                            placeholder="00.00" style="width:150px;font-size:1.2rem;" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+                    <div id="hasilParkir" class="text-center mt-4" style="display:none;">
+                        <h5 class="mb-2">Durasi Parkir: <span id="durasiParkir" class="text-primary"></span></h5>
+                        <h4 class="text-success">Total Biaya: <span id="biayaParkir"></span></h4>
+                        <p class="text-muted mt-2" id="waktuSekarang"></p>
+                    </div>
                 </div>
             </div>
-        </div>
-    <?php endif; ?>
-
-    <!-- ═══════════════════════════════════════════════════════
-         KOMPONEN SERIES TRACKER
-    ════════════════════════════════════════════════════════ -->
-    <div class="card series-card mt-4 shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="mb-0"><i class="fas fa-tv mr-2"></i> Series Tracker</h4>
-            <button class="btn btn-light btn-sm font-weight-bold" id="btn-open-add-series">
-                <i class="fas fa-plus mr-1"></i> Tambah
-            </button>
-        </div>
-        <div class="card-body" id="series-list-container">
-            <div class="series-empty" id="series-empty-state">
-                <i class="fas fa-film"></i>
-                Belum ada data. Klik <strong>Tambah</strong> untuk mulai mencatat.
-            </div>
-        </div>
+        <?php endif; ?>
     </div>
 
 </section>
