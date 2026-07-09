@@ -182,10 +182,10 @@ Aplikasi Perhitungan
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
-         1. KOMPONEN SALDO NIA
+         1. KOMPONEN SALDO
     ════════════════════════════════════════════════════════ -->
     <?php foreach ($counters as $saldoData): ?>
-        <?php if ($saldoData['counter_name'] === 'Saldo Nia'): ?>
+        <?php if (stripos($saldoData['counter_name'], 'Saldo') !== false): ?>
             <div class="card shadow-sm border-primary mb-4">
                 <div class="card-header bg-primary text-white">
                     <h4 class="text-white">Informasi <?= esc($saldoData['counter_name']) ?></h4>
@@ -302,45 +302,6 @@ Aplikasi Perhitungan
         endforeach; 
         ?>
 
-        <!-- LAINNYA: Saldo Tira, Hutang Galon, dll. -->
-        <?php foreach ($counters as $saldoData): ?>
-            <?php if ($saldoData['counter_name'] === 'Saldo Tira'): ?>
-                <div class="card shadow-sm border-primary mb-4 mt-4">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="text-white">Informasi <?= esc($saldoData['counter_name']) ?></h4>
-                    </div>
-                    <div class="card-body text-center">
-                        <h1 class="text-primary mb-4">Rp <span id="saldo-amount-<?= $saldoData['counter_id'] ?>"><?= number_format($saldoData['amount'], 0, ',', '.') ?></span></h1>
-                        <div class="form-group">
-                            <label>Nominal (otomatis bernilai ribuan)</label>
-                            <div class="input-group mb-3" style="max-width: 350px; margin: auto;">
-                                <div class="input-group-prepend"><span class="input-group-text font-weight-bold">Rp</span></div>
-                                <input type="number" id="input-saldo-<?= $saldoData['counter_id'] ?>" class="form-control text-center text-lg font-weight-bold" placeholder="Contoh: 50" style="font-size: 1.2rem;">
-                                <div class="input-group-append"><span class="input-group-text font-weight-bold">.000</span></div>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-center mb-4">
-                            <button class="btn btn-danger btn-lg mx-2 btn-saldo-action" data-action="minus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
-                                <i class="fas fa-minus"></i> Kurangi
-                            </button>
-                            <button class="btn btn-success btn-lg mx-2 btn-saldo-action" data-action="plus" data-id="<?= $saldoData['counter_id'] ?>" style="min-width: 120px;">
-                                <i class="fas fa-plus"></i> Tambah
-                            </button>
-                        </div>
-                        <div id="saldo-last-calc-container-<?= $saldoData['counter_id'] ?>"
-                            class="alert alert-light border text-left mx-auto position-relative"
-                            style="display: <?= $saldoData['last_calculation'] ? 'block' : 'none' ?>; max-width: 350px; font-size: 16px; font-weight: bold; color: #34395e; background-color:#f9f9f9;">
-                            <button type="button" class="btn btn-sm btn-outline-secondary position-absolute btn-copy-saldo" data-id="<?= $saldoData['counter_id'] ?>" style="top:10px;right:10px;padding:10px;" title="Copy Data">
-                                <i class="fas fa-copy" style="font-size:60px"></i>
-                            </button>
-                            <div id="saldo-last-calc-<?= $saldoData['counter_id'] ?>" style="white-space:pre-line;padding-right:30px;">
-                                <?= $saldoData['last_calculation'] ?? '' ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
-        <?php endforeach; ?>
 
         <?php foreach ($counters as $key => $value): ?>
             <?php if ($value['counter_name'] == "Hutang Galon"): ?>
