@@ -17,6 +17,8 @@ class Counters extends Model
     protected $allowedFields    = [
         'counter_name',
         'amount',
+        'last_calculation',
+        'hidden',
     ];
 
     // Dates
