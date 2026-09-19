@@ -172,6 +172,70 @@ Aplikasi Perhitungan
         margin-bottom: 12px;
         display: block;
     }
+
+    /* ── Saldo Cuti Half-Day Counter ───────────────────────────── */
+    .cuti-balance-display {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6777ef;
+        text-align: center;
+        letter-spacing: -1px;
+    }
+
+    .cuti-balance-display .cuti-unit {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #aaa;
+        margin-left: 4px;
+    }
+
+    .cuti-half-btn {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 700;
+    }
+
+    /* ── TMDB Search Dropdown ────────────────────────────────────── */
+    .tmdb-search-dropdown {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0 0 8px 8px;
+        max-height: 240px;
+        overflow-y: auto;
+        box-shadow: 0 4px 16px rgba(0,0,0,.1);
+    }
+
+    .tmdb-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid #f4f6f9;
+        transition: background .12s;
+    }
+
+    .tmdb-item:hover { background: #f0f3ff; }
+
+    .tmdb-item img {
+        width: 32px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+
+    .tmdb-item-info .tmdb-title { font-weight: 700; font-size: 13px; }
+    .tmdb-item-info .tmdb-meta  { font-size: 11px; color: #888; }
+
+    .tmdb-search-wrapper { position: relative; }
+    .tmdb-searching-spinner { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: none; }
 </style>
 <?= $this->endSection() ?>
 
@@ -188,6 +252,8 @@ Aplikasi Perhitungan
     $visibleSaldo = [];
     $hiddenSaldo = [];
     foreach ($counters as $saldoData) {
+        // Exclude Cuti counters — they have their own dedicated card below
+        if (stripos($saldoData['counter_name'], 'Cuti') !== false) continue;
         if (stripos($saldoData['counter_name'], 'Saldo') !== false) {
             if (isset($saldoData['hidden']) && (int)$saldoData['hidden'] === 1) {
                 $hiddenSaldo[] = $saldoData;
@@ -288,6 +354,54 @@ Aplikasi Perhitungan
                 </div>
             </div>
         </div>
+    <?php endif; ?>
+
+    <!-- ═══════════════════════════════════════════════════════
+         KOMPONEN SALDO CUTI (Off-Days Balance, supports 0.5)
+    ════════════════════════════════════════════════════════ -->
+    <?php
+    $cutiData = null;
+    foreach ($counters as $c) {
+        if (stripos($c['counter_name'], 'Cuti') !== false) {
+            $cutiData = $c;
+            break;
+        }
+    }
+    if ($cutiData !== null):
+        // Amount is stored ×2 (integer), display divided by 2
+        $cutiDisplay = $cutiData['amount'] / 2;
+    ?>
+    <div class="card shadow-sm mb-4" style="border: 2px solid #28a745;">
+        <div class="card-header" style="background: linear-gradient(135deg,#28a745,#1e7e34); color:#fff;">
+        <h4 class="text-white mb-0"><i class="fas fa-calendar-minus mr-2"></i> Jatah Cuti</h4>
+        </div>
+        <div class="card-body text-center">
+            <p class="text-muted mb-1" style="font-size:12px;">Last Update: <?= timeFormat($cutiData['updated_at']) ?></p>
+            <div class="cuti-balance-display" id="cuti-display-<?= $cutiData['counter_id'] ?>">
+                <?= $cutiDisplay ?><span class="cuti-unit">hari</span>
+            </div>
+            <div class="row" style="justify-content:space-evenly; margin-top: 18px;">
+                <!-- Minus full day -->
+                <button id="cuti-minus-full-<?= $cutiData['counter_id'] ?>" class="btn btn-danger rounded-circle cuti-btn" data-id="<?= $cutiData['counter_id'] ?>" data-step="-2" title="Kurangi 1 Hari">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <!-- Minus half day -->
+                <button id="cuti-minus-half-<?= $cutiData['counter_id'] ?>" class="btn btn-outline-danger rounded cuti-btn cuti-half-btn" data-id="<?= $cutiData['counter_id'] ?>" data-step="-1" title="Kurangi ½ Hari">
+                    -½
+                </button>
+                <!-- Center: stored raw (×2) value hidden -->
+                <span id="cuti-raw-<?= $cutiData['counter_id'] ?>" style="display:none;"><?= $cutiData['amount'] ?></span>
+                <!-- Plus half day -->
+                <button id="cuti-plus-half-<?= $cutiData['counter_id'] ?>" class="btn btn-outline-success rounded cuti-btn cuti-half-btn" data-id="<?= $cutiData['counter_id'] ?>" data-step="1" title="Tambah ½ Hari">
+                    +½
+                </button>
+                <!-- Plus full day -->
+                <button id="cuti-plus-full-<?= $cutiData['counter_id'] ?>" class="btn btn-success rounded-circle cuti-btn" data-id="<?= $cutiData['counter_id'] ?>" data-step="2" title="Tambah 1 Hari">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
     <?php endif; ?>
 
     <!-- ═══════════════════════════════════════════════════════
@@ -442,10 +556,23 @@ Aplikasi Perhitungan
             <div class="modal-body">
                 <input type="hidden" id="series-edit-id" value="">
 
+                <!-- Simpan button TOP (visible before the form fields) -->
+                <div class="d-flex justify-content-end mb-3" id="btn-save-top-wrapper">
+                    <button type="button" class="btn btn-primary" id="btn-save-series-top">
+                        <i class="fas fa-save mr-1"></i> Simpan
+                    </button>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group col-md-12">
                         <label class="font-weight-bold">Judul <span class="text-danger">*</span></label>
-                        <input type="text" id="series-title" class="form-control" placeholder="Contoh: Attack on Titan">
+                        <!-- TMDB search wrapper -->
+                        <div class="tmdb-search-wrapper">
+                            <input type="text" id="series-title" class="form-control" placeholder="Ketik judul untuk mencari di TMDB..." autocomplete="off">
+                            <span class="tmdb-searching-spinner" id="tmdb-spinner"><i class="fas fa-circle-notch fa-spin text-primary"></i></span>
+                            <div class="tmdb-search-dropdown" id="tmdb-dropdown" style="display:none;"></div>
+                        </div>
+                        <small class="text-muted" id="tmdb-selected-info" style="display:none;"><i class="fas fa-check-circle text-success"></i> Data dari TMDB — season & episode diisi otomatis</small>
                     </div>
                 </div>
 
@@ -542,6 +669,8 @@ Aplikasi Perhitungan
     // ─────────────────────────────────────────────────────────────────────────────
     //  HELPERS
     // ─────────────────────────────────────────────────────────────────────────────
+    const TMDB_KEY = "<?= esc($tmdbApiKey ?? '') ?>";
+
     function showToast(message, type = 'success') {
         const bg = type === 'danger' ? '#dc3545' : (type === 'warning' ? '#ffc107' : '#28a745');
         const $t = $(`<div class="toast-notification" style="background:${bg}">${message}</div>`);
@@ -695,6 +824,42 @@ Aplikasi Perhitungan
                 minute: '2-digit'
             }));
             $('#hasilParkir').fadeIn();
+        }
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    //  SALDO CUTI — Half-day counter (stored ×2 as integer)
+    // ─────────────────────────────────────────────────────────────────────────────
+    $(document).ready(function() {
+        let cutiTimeout = null;
+
+        $(document).on('click', '.cuti-btn', function() {
+            const id   = $(this).data('id');
+            const step = parseInt($(this).data('step')); // -2/-1/+1/+2
+            const $raw = $('#cuti-raw-' + id);
+            let rawVal = parseInt($raw.text()) + step;
+            if (rawVal < 0) rawVal = 0; // floor at 0
+            $raw.text(rawVal);
+
+            // Update display (raw / 2)
+            const display = rawVal / 2;
+            const displayStr = Number.isInteger(display) ? display : display.toFixed(1);
+            $('#cuti-display-' + id).html(displayStr + '<span class="cuti-unit">hari</span>');
+
+            clearTimeout(cutiTimeout);
+            cutiTimeout = setTimeout(function() {
+                saveCutiData(id, rawVal);
+            }, 1500);
+        });
+
+        function saveCutiData(counterId, rawAmount) {
+            $.ajax({
+                url: "<?= site_url('Home/update') ?>",
+                type: 'POST',
+                data: { ['counter-' + counterId]: rawAmount },
+                success: function() { showToast('Saldo Cuti disimpan!'); },
+                error:   function() { showToast('Gagal menyimpan Saldo Cuti!', 'danger'); }
+            });
         }
     });
 
@@ -1002,7 +1167,6 @@ Aplikasi Perhitungan
         });
 
         // ── BUKA MODAL TAMBAH ───────────────────────────────────────
-        // ── BUKA MODAL TAMBAH ───────────────────────────────────────
         $('#btn-open-add-series').click(function() {
             editData = null;
             $('#series-edit-id').val('');
@@ -1012,6 +1176,8 @@ Aplikasi Perhitungan
             $('#series-watched-season').val('1');
             $('#series-watched-episode').val('1');
             $('#watched-input-row').show();
+            $('#tmdb-selected-info').hide();
+            $('#tmdb-dropdown').hide();
 
             // Tampilkan section arsip & load datanya
             $('#divider-disabled-series').show();
@@ -1038,6 +1204,8 @@ Aplikasi Perhitungan
                 $('#series-notes').val(series.notes || '');
                 $('#series-rating').val(series.rating || '');
                 $('#watched-input-row').hide();
+                $('#tmdb-selected-info').hide();
+                $('#tmdb-dropdown').hide();
 
                 // Sembunyikan section arsip saat edit
                 $('#divider-disabled-series').hide();
@@ -1054,34 +1222,8 @@ Aplikasi Perhitungan
             });
         });
 
-        // ── BUKA MODAL EDIT ─────────────────────────────────────────
-        $(document).on('click', '.btn-edit-series', function() {
-            const id = $(this).data('id');
-            $.get(BASE_URL + 'series/list', function(res) {
-                if (!res.success) return;
-                const series = res.data.find(s => s.id == id);
-                if (!series) return;
-
-                editData = series;
-                $('#series-edit-id').val(series.id);
-                $('#series-title').val(series.title);
-                $('#series-notes').val(series.notes || '');
-                $('#series-rating').val(series.rating || '');
-                $('#watched-input-row').hide(); // Sembunyikan input default saat Edit
-
-                resetSeasonForm();
-                (series.seasons || []).forEach(function(season) {
-                    addSeasonRow(season.season_num, season.total_eps, season.episodes);
-                });
-                if ((series.seasons || []).length === 0) addSeasonRow(1, '');
-
-                $('#modalSeriesLabel').text('Edit Series');
-                $('#modalSeries').modal('show');
-            });
-        });
-
         // ── SIMPAN (TAMBAH / EDIT) ──────────────────────────────────
-        $('#btn-save-series').click(function() {
+        function doSaveSeries() {
             const title = $('#series-title').val().trim();
             const editId = $('#series-edit-id').val();
 
@@ -1116,7 +1258,7 @@ Aplikasi Perhitungan
             const url = editId ? BASE_URL + 'series/update/' + editId : BASE_URL + 'series/store';
             const method = editId ? 'PUT' : 'POST';
 
-            $('#btn-save-series').prop('disabled', true);
+            $('#btn-save-series, #btn-save-series-top').prop('disabled', true);
             $.ajax({
                 url: url,
                 type: method,
@@ -1135,10 +1277,14 @@ Aplikasi Perhitungan
                     showToast('Terjadi kesalahan pada server!', 'danger');
                 },
                 complete: function() {
-                    $('#btn-save-series').prop('disabled', false);
+                    $('#btn-save-series, #btn-save-series-top').prop('disabled', false);
                 }
             });
-        });
+        }
+
+        // Both Simpan buttons trigger the same function
+        $('#btn-save-series').click(doSaveSeries);
+        $('#btn-save-series-top').click(doSaveSeries);
 
         // ── ARSIP / DISABLE ──────────────────────────────────────────
         $(document).on('click', '.btn-disable-series', function() {
@@ -1189,6 +1335,119 @@ Aplikasi Perhitungan
                     deleteId = null;
                 }
             });
+        });
+
+        // ── TMDB SEARCH ──────────────────────────────────────────────
+        let tmdbTimeout = null;
+        let tmdbSelectedId = null;
+        const TMDB_IMG = 'https://image.tmdb.org/t/p/w92';
+
+        $('#series-title').on('input', function() {
+            const q = $(this).val().trim();
+            // Clear TMDB selection when user edits manually
+            tmdbSelectedId = null;
+            $('#tmdb-selected-info').hide();
+
+            if (q.length < 2) {
+                $('#tmdb-dropdown').hide();
+                return;
+            }
+
+            clearTimeout(tmdbTimeout);
+            tmdbTimeout = setTimeout(function() {
+                if (!TMDB_KEY || TMDB_KEY === 'your_tmdb_api_key_here') {
+                    // No key yet — just skip search silently
+                    return;
+                }
+                $('#tmdb-spinner').show();
+                $.ajax({
+                    url: `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&language=en-US&page=1`,
+                    type: 'GET',
+                    success: function(data) {
+                        renderTmdbDropdown(data.results || []);
+                    },
+                    error: function() {
+                        $('#tmdb-dropdown').hide();
+                    },
+                    complete: function() {
+                        $('#tmdb-spinner').hide();
+                    }
+                });
+            }, 500);
+        });
+
+        function renderTmdbDropdown(results) {
+            const $dd = $('#tmdb-dropdown');
+            $dd.empty();
+
+            if (results.length === 0) {
+                $dd.hide();
+                return;
+            }
+
+            results.slice(0, 8).forEach(function(item) {
+                const poster = item.poster_path ? TMDB_IMG + item.poster_path : 'https://via.placeholder.com/32x48?text=?';
+                const year   = item.first_air_date ? item.first_air_date.substr(0, 4) : '?';
+                const $item  = $(`
+                    <div class="tmdb-item" data-id="${item.id}" data-name="${escHtmlJs(item.name)}">
+                        <img src="${poster}" alt="">
+                        <div class="tmdb-item-info">
+                            <div class="tmdb-title">${escHtmlJs(item.name)}</div>
+                            <div class="tmdb-meta">${year} &bull; TV Series</div>
+                        </div>
+                    </div>
+                `);
+                $dd.append($item);
+            });
+
+            $dd.show();
+        }
+
+        function escHtmlJs(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // User clicks a TMDB result
+        $(document).on('click', '.tmdb-item', function() {
+            const id   = $(this).data('id');
+            const name = $(this).data('name');
+            $('#series-title').val(name);
+            $('#tmdb-dropdown').hide();
+
+            if (!TMDB_KEY || TMDB_KEY === 'your_tmdb_api_key_here') return;
+
+            // Fetch full season/episode data from TMDB
+            $('#tmdb-spinner').show();
+            $.ajax({
+                url: `https://api.themoviedb.org/3/tv/${id}?api_key=${TMDB_KEY}&language=en-US`,
+                type: 'GET',
+                success: function(data) {
+                    resetSeasonForm();
+                    const seasons = (data.seasons || []).filter(s => s.season_number > 0); // skip specials
+                    seasons.forEach(function(s) {
+                        addSeasonRow(s.season_number, s.episode_count, []);
+                    });
+                    if (seasons.length === 0) addSeasonRow(1, '');
+
+                    tmdbSelectedId = id;
+                    $('#tmdb-selected-info').show();
+                    showToast('Data TMDB berhasil dimuat! Season & episode diisi otomatis.');
+                },
+                error: function() {
+                    showToast('Gagal mengambil data dari TMDB', 'danger');
+                },
+                complete: function() {
+                    $('#tmdb-spinner').hide();
+                }
+            });
+        });
+
+        // Close dropdown when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.tmdb-search-wrapper').length) {
+                $('#tmdb-dropdown').hide();
+            }
         });
 
         // ── INIT ─────────────────────────────────────────────────────

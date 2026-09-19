@@ -19,6 +19,7 @@ class Home extends BaseController
             ->where('disabled', '!=', 1)
             ->findAll();
         $data['assetsPath'] = (strpos(current_url(), 'balrafa.tech') !== false) ? env('app.assetsPath') : base_url();
+        $data['tmdbApiKey'] = env('TMDB_API_KEY', '');
         return view('home', $data);
     }
     public function update()
