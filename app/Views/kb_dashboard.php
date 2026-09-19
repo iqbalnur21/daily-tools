@@ -190,7 +190,19 @@ Aplikasi KB Kalender
               <input type="hidden" name="id" value="<?= $active_id ?>">
               <div class="form-group">
                 <label class="text-muted">Kapan Haid Anda Selesai?</label>
-                <input type="date" name="end_date" class="form-control bg-light border-0" required>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <button type="button" class="btn btn-outline-secondary date-step-btn" data-target="end_date_input" data-step="-1" title="Hari sebelumnya">
+                      <i class="fas fa-chevron-left"></i>
+                    </button>
+                  </div>
+                  <input type="date" name="end_date" id="end_date_input" class="form-control bg-light border-0 text-center" required>
+                  <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary date-step-btn" data-target="end_date_input" data-step="1" title="Hari berikutnya">
+                      <i class="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
               <button type="submit" class="btn btn-info btn-block btn-lg mt-4 shadow-sm" style="border-radius: 8px;">
                 <i class="fas fa-check mr-1"></i> Simpan Selesai Haid
@@ -201,7 +213,19 @@ Aplikasi KB Kalender
             <form action="<?= base_url('KbCalculator/storeStart') ?>" method="POST">
               <div class="form-group">
                 <label class="text-muted">Tanggal Mulai Haid</label>
-                <input type="date" name="start_date" class="form-control bg-light border-0" required>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <button type="button" class="btn btn-outline-secondary date-step-btn" data-target="start_date_input" data-step="-1" title="Hari sebelumnya">
+                      <i class="fas fa-chevron-left"></i>
+                    </button>
+                  </div>
+                  <input type="date" name="start_date" id="start_date_input" class="form-control bg-light border-0 text-center" required>
+                  <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary date-step-btn" data-target="start_date_input" data-step="1" title="Hari berikutnya">
+                      <i class="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
               <button type="submit" class="btn btn-primary btn-block btn-lg mt-4 shadow-sm" style="border-radius: 8px;">
                 <i class="fas fa-play mr-1"></i> Catat Mulai Haid
@@ -343,10 +367,45 @@ Aplikasi KB Kalender
 
 <script>
   $(document).ready(function() {
+
+    // ── Safely parse a YYYY-MM-DD string as LOCAL date (avoids UTC timezone bug) ──
+    function parseLocalDate(str) {
+      if (!str) return new Date();
+      const parts = str.split('-');
+      // new Date(year, monthIndex, day) — always local time, never UTC
+      return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    }
+
+    // ── Format a Date object back to YYYY-MM-DD ──
+    function formatDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    // ── Auto-set inputs to today on page load ──
+    const todayStr = formatDate(new Date());
+    if ($('#start_date_input').length) $('#start_date_input').val(todayStr);
+    if ($('#end_date_input').length)   $('#end_date_input').val(todayStr);
+
+    // ── Step buttons: ← / → step from current input value ──
+    // Month-boundary safe: setDate() rolls over month/year automatically
+    $(document).on('click', '.date-step-btn', function() {
+      const targetId = $(this).data('target');
+      const step     = parseInt($(this).data('step')); // -1 or +1
+
+      const $input = $('#' + targetId);
+      const d = parseLocalDate($input.val()); // read current value
+      d.setDate(d.getDate() + step);          // step (handles month rollover)
+      $input.val(formatDate(d));              // write back
+    });
+
+    // ── Edit modal fill ──
     $('.btn-edit').on('click', function() {
-      const id = $(this).data('id');
+      const id    = $(this).data('id');
       const start = $(this).data('start');
-      const end = $(this).data('end');
+      const end   = $(this).data('end');
 
       $('#edit_id').val(id);
       $('#edit_start').val(start);
