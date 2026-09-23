@@ -29,9 +29,38 @@ $routes->setAutoRoute(true);
  * --------------------------------------------------------------------
  */
 
-// We get a performance increase by specifying the default
-// route since we don't have to scan directories.
+// Home Routes
 $routes->get('/', 'Home::index');
+$routes->match(['get', 'post'], 'home', 'Home::index');
+$routes->match(['get', 'post'], 'Home', 'Home::index');
+$routes->match(['get', 'post'], 'home/index', 'Home::index');
+$routes->match(['get', 'post'], 'Home/index', 'Home::index');
+$routes->post('home/update', 'Home::update');
+$routes->post('Home/update', 'Home::update');
+$routes->post('home/updateSaldo', 'Home::updateSaldo');
+$routes->post('Home/updateSaldo', 'Home::updateSaldo');
+
+// Auth Routes
+$routes->get('auth', 'Auth::index');
+$routes->get('Auth', 'Auth::index');
+$routes->get('auth/index', 'Auth::index');
+$routes->get('Auth/index', 'Auth::index');
+$routes->post('auth/loginProcess', 'Auth::loginProcess');
+$routes->post('Auth/loginProcess', 'Auth::loginProcess');
+$routes->get('auth/logout', 'Auth::logout');
+$routes->get('Auth/logout', 'Auth::logout');
+
+// KbCalculator Routes
+$routes->get('kbCalculator', 'KbCalculator::index');
+$routes->get('KbCalculator', 'KbCalculator::index');
+$routes->get('kbCalculator/index', 'KbCalculator::index');
+$routes->get('KbCalculator/index', 'KbCalculator::index');
+$routes->post('kbCalculator/storeStart', 'KbCalculator::storeStart');
+$routes->post('KbCalculator/storeStart', 'KbCalculator::storeStart');
+$routes->post('kbCalculator/storeEnd', 'KbCalculator::storeEnd');
+$routes->post('KbCalculator/storeEnd', 'KbCalculator::storeEnd');
+$routes->post('kbCalculator/update', 'KbCalculator::update');
+$routes->post('KbCalculator/update', 'KbCalculator::update');
 
 // Series Tracker Routes
 $routes->get('series/list', 'SeriesController::list');
@@ -43,18 +72,11 @@ $routes->post('series/episode/toggle', 'SeriesController::toggleEpisode');
 $routes->get('series/list-disabled', 'SeriesController::listDisabled');
 $routes->post('series/disable/(:num)', 'SeriesController::disable/$1');
 $routes->post('series/restore/(:num)', 'SeriesController::restore/$1');
+
 /*
  * --------------------------------------------------------------------
  * Additional Routing
  * --------------------------------------------------------------------
- *
- * There will often be times that you need additional routing and you
- * need it to be able to override any defaults in this file. Environment
- * based routes is one such time. require() additional route files here
- * to make that happen.
- *
- * You will have access to the $routes object within that file without
- * needing to reload it.
  */
 if (file_exists(APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php')) {
     require APPPATH . 'Config/' . ENVIRONMENT . '/Routes.php';

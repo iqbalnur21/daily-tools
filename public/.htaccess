@@ -1,14 +1,14 @@
-# Disable directory browsing
-Options All -Indexes
+# Disable directory browsing (Commented out: Options is forbidden on InfinityFree/free hosting)
+# Options -Indexes
 
 # ----------------------------------------------------------------------
 # Rewrite engine
 # ----------------------------------------------------------------------
 
 # Turning on the rewrite engine is necessary for the following rules and features.
-# FollowSymLinks must be enabled for this to work.
 <IfModule mod_rewrite.c>
-	Options +FollowSymlinks
+	# Options +FollowSymlinks and Options +SymLinksIfOwnerMatch are disabled on InfinityFree
+	# Options +SymLinksIfOwnerMatch
 	RewriteEngine On
 
 	# If you installed CodeIgniter in a subfolder, you will need to
@@ -44,6 +44,5 @@ Options All -Indexes
 	ErrorDocument 404 index.php
 </IfModule>
 
-# Disable server signature start
-	ServerSignature Off
-# Disable server signature end
+# Disable server signature (Commented out: Not supported on InfinityFree)
+# ServerSignature Off
