@@ -484,11 +484,21 @@ Aplikasi Perhitungan
         ?>
 
 
+        <!-- Other Counters (e.g. Senam Nia Dalam Sebulan, Hutang Galon, etc.) -->
         <?php foreach ($counters as $key => $value): ?>
-            <?php if ($value['counter_name'] == "Hutang Galon"): ?>
+            <?php 
+            $name = $value['counter_name'];
+            $isSpecial = (
+                stripos($name, 'Saldo') !== false ||
+                stripos($name, 'Cuti') !== false ||
+                stripos($name, 'Parkir') !== false ||
+                in_array($name, ['Subuh', 'Zuhur', 'Ashar', 'Magrib', 'Isya', 'Ganti Puasa', 'Ganti Puasa Nia'])
+            );
+            ?>
+            <?php if (! $isSpecial): ?>
                 <div class="card mt-4">
                     <div class="card-header">
-                        <h4><?= $value['counter_name'] ?></h4>
+                        <h4><?= esc($value['counter_name']) ?></h4>
                     </div>
                     <div class="card-body">
                         <div class="form-group">
